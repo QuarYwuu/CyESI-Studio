@@ -1,0 +1,63 @@
+# Local Python environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.Python
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+.eggs/
+
+# Generated simulations, exports and local records
+outputs/
+results/
+exports/
+reports/
+runs/
+*.npz
+*.npy
+*.h5
+*.hdf5
+*.gif
+*.mp4
+*.log
+*.tmp
+
+# Build products
+build/
+dist/
+wheelhouse/
+
+# Development, manuscript and review artifacts
+tests/
+test_*.py
+*_test.py
+verification/
+validation_results/
+acceptance/
+qa/
+checklists/
+manuscript/
+manuscripts/
+papers/
+tools/
+logs/
+revision_history/
+
+# Local editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.env
+.env.*

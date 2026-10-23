@@ -1,0 +1,7 @@
+numpy>=1.24
+scipy>=1.11
+scikit-fem>=12,<13
+matplotlib>=3.8
+Pillow>=10
+contourpy>=1.0
+threadpoolctl>=3

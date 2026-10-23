@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cyesi-studio"
+version = "0.2.0"
+description = "CyESI multiphysics, continuous cell transport and mass-spectrometry acquisition"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "scipy>=1.11", "scikit-fem>=12,<13", "matplotlib>=3.8", "Pillow>=10", "contourpy>=1.0", "threadpoolctl>=3"]
+
+[project.optional-dependencies]
+performance = ["numba>=0.61.2"]
+
+[project.urls]
+Repository = "https://github.com/QuarYwuu/CyESI-Studio"
+Issues = "https://github.com/QuarYwuu/CyESI-Studio/issues"
+
+[project.scripts]
+cyesi = "CyESI_Simulator.studio.entrypoint:main"
+cyesi-studio = "CyESI_Simulator.studio.entrypoint:main"
+
+[tool.setuptools.packages.find]
+include = ["CyESI_Simulator*"]
+
+[tool.setuptools.package-data]
+"CyESI_Simulator.scene3d" = ["static/*.html", "static/*.css", "static/*.js"]
+"CyESI_Simulator.studio" = ["static/*.html", "static/*.css", "static/*.js"]
