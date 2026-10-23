@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cyesi-studio"
-version = "0.2.1"
+version = "1.0.0"
 description = "CyESI multiphysics, continuous cell transport and mass-spectrometry acquisition"
 readme = "README.md"
 license = {file = "LICENSE"}
