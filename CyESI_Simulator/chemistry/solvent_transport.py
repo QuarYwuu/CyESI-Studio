@@ -1,7 +1,7 @@
-"""Steady methanol advection-diffusion: cell-centred, bounded upwind FV.
+"""Steady methanol advection-diffusion using bounded, cell-centred upwind FV.
 
-The sample is methanol-free 140 mM ammonium formate by default, not PBS.
-This is extracellular exposure; no calibrated membrane rupture kinetics.
+The default sample is methanol-free 140 mM ammonium formate. The solution
+describes extracellular solvent exposure.
 """
 from dataclasses import dataclass
 import numpy as np
@@ -75,7 +75,7 @@ def solve(config, flow):
         Rf, Zf = np.meshgrid(r+xi*np.diff(re)/2, ze, indexing="ij")
         qz += _evaluate(flow, Rf, Zf, valid_z)[1]*np.pi*Rf*np.diff(re)[:, None]
     # Reconstruct a conservative FV flux from section-integrated FEM flux.
-    # This small projection preserves the exact supplied sample/sheath flow rates.
+    # Project each inlet flux to its prescribed sample or sheath flow.
     correction = []
     for j, zj in enumerate(ze):
         groups = [(r < g.a, config.fluid.qs), (r > g.b, config.fluid.qh)] if zj <= g.inner_tip+1e-12 else [(np.ones(len(r), bool), config.fluid.qs+config.fluid.qh)]

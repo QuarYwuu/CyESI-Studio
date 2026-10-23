@@ -1,10 +1,8 @@
-"""Effective surface charge and induced membrane charge along actual 3-D paths.
+"""Surface-charge proxies and induced membrane charge along 3D paths.
 
-These are separate observables: a slip-plane Debye--Huckel charge proxy, the
-Smoluchowski electrophoretic force-equivalent charge, and an equal/opposite
-capacitive polarization. They are diagnostics and never add another qE force
-to particles that already include electrophoresis. Structural membrane charge
-needs pH, acid/base sites and ion adsorption data and remains unknown.
+Outputs include slip-plane Debye-Huckel charge, a Smoluchowski force-equivalent
+charge and capacitive polarization. They do not add an extra qE term to
+electrophoretic motion. Structural membrane charge requires separate chemistry.
 """
 from __future__ import annotations
 

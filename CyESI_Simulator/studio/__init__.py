@@ -1,1 +1,1 @@
-"""Unified local CyESI workbench, independent of the legacy applications."""
+"""Local 2D and 3D CyESI workspace."""

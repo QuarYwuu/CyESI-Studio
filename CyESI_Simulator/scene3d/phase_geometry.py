@@ -1,8 +1,7 @@
-"""Actual Cartesian phi=.5 isosurface and connected-component diagnostics.
+"""Extract the phi=0.5 isosurface and connected liquid components.
 
-The display uses marching tetrahedra on cell-centre samples. It introduces no
-prescribed cone, no liquid bridge, and no extrapolated surface outside the
-saved domain. Vertices are SI metres and may share the apparatus path map.
+Marching tetrahedra uses cell-centre samples within the stored domain.
+Vertices use SI metres and can share the capillary display-path mapping.
 """
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Restore the original numerical trajectory view from saved CFD arrays."""
+"""Display cell trajectories from saved flow and transport arrays."""
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -65,7 +65,7 @@ class TrajectoryWindow:
     def restore(self):
         if self.closed or self.busy:return
         data=self.data;messages=self.messages;revision=self.revision
-        # Keep generated views separate from source CFD and saved reports.
+        # Save rendered views in their own directory.
         output=Path('outputs')/'trajectory_views'/datetime.now().strftime('%Y%m%d_%H%M%S_%f')
         f=data.fields
         particles=SimpleNamespace(saved_ids=data.ids,trajectory_time=f['trajectory_time_s'],

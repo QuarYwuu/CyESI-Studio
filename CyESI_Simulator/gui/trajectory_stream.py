@@ -1,7 +1,7 @@
-"""Continuous injection at the FULL capillary entrance, on one physical clock.
+"""Continuous cell feed at the sample-capillary entrance.
 
-No extra cell source is introduced at the resolved-tip entrance. Positions
-follow injection_time + the saved long-tube/tip response, keeping event IDs.
+Each event follows its injection time and saved long-tube/tip response
+under a single clock and event ID.
 """
 from copy import deepcopy
 import time

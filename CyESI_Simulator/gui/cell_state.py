@@ -1,4 +1,4 @@
-"""Native conditional cell-state workspace; queue-only background worker."""
+"""Membrane and inlet workspace with background calculation."""
 from pathlib import Path
 from datetime import datetime,timezone,timedelta
 import json
@@ -176,11 +176,11 @@ class CellStateWindow:
         except (ValueError,OSError,KeyError) as e:messagebox.showerror("结果加载失败",str(e),parent=self.window)
 
     def load_output(self,path):
-        if self.data.rate_preview:raise ValueError(' Sample flow changed ,  Update the source first  CFD, 当前仅有速率预览')
+        if self.data.rate_preview:raise ValueError("Sample flow changed. Recompute the flow solution before updating this preview.")
         path=Path(path)
         summary=json.loads((path/"state_summary.json").read_text(encoding="utf-8"))
         if Path(summary['source']).resolve()!=Path(self.data.source).resolve():
-            raise ValueError("情景结果来自另一组 CFD, 请先加载对应 CFD  Results ")
+            raise ValueError("These parameters belong to another flow solution. Load the corresponding results.")
         from ..particle.events import concentration_only_change
         from ..cell_state.report import load_analysis
         if summary.get('source_config') is None or not concentration_only_change(summary['source_config'],self.data.config):
@@ -219,8 +219,7 @@ class CellStateWindow:
                     elif same_source and result.source_config==self.data.config.to_dict():
                         self.analysis_result=result;self.show_output(path,summarize(result))
                     elif same_source and concentration_only_change(result.source_config,self.data.config):
-                        # An edit while the worker was running must not restore
-                        # the old snapshot. Reweight the completed responses.
+                        # Discard completed work when its inputs have changed.
                         self.analysis_result=result
                         self.launch_worker(self.parameters,result)
                     else:self.status.set("计算期间源数据已改变; 请计算当前参数的细胞状态.")

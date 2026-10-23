@@ -1,8 +1,7 @@
-"""Versioned, pickle-free native 3-D scene checkpoints.
+"""Versioned, pickle-free 3D checkpoints.
 
-Loading restores solved fields, particle histories, the actual continuous feed
-and acquisition ledger. It calls no flow, phase, particle, arrival, or carrier
-solver. A manifest written last marks an independent record as complete.
+Loading restores fields, trajectories, event histories and acquisition records.
+The manifest is written last to mark a completed record.
 """
 from __future__ import annotations
 

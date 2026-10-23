@@ -1,9 +1,7 @@
-"""Numerical consistency and physical scope, never a validation certificate.
+"""Numerical balances, convergence checks and model-scope summaries.
 
-Assessments use solved inputs and actual recorded diagnostics. Missing older
-diagnostics stay missing; they are never replaced by reconstructed balances.
-The screening tolerances below are software safeguards, not experimental
-accuracy bounds. No arrays, configurations or files supplied here are changed.
+Checks use recorded solver diagnostics. Missing diagnostics remain unavailable.
+Screening tolerances are numerical criteria, not experimental error bounds.
 """
 from __future__ import annotations
 
@@ -60,14 +58,11 @@ def _json_safe(value):
 
 
 def assess_model(data):
-    """Return JSON-safe checks for an ExplorerData-compatible result object.
+    """Return numerical checks as JSON-compatible values.
 
-    ``pass`` means this particular check passed, not that the complete model
-    predicts an experiment. ``warning`` needs refinement or review; ``failed``
-    identifies inconsistent values; ``missing`` has no recorded evidence;
-    ``assumption`` identifies an uncalibrated parameter or unresolved closure.
-    Exact 95% intervals quantify finite independent transport-response sampling
-    only: they exclude uncertain input properties and model discrepancy.
+    Statuses distinguish passed checks, warnings, failures, missing diagnostics
+    and model assumptions. Exact 95% intervals cover finite independent response
+    sampling, excluding input uncertainty and model discrepancy.
     """
     c = data.config
     f = data.fields

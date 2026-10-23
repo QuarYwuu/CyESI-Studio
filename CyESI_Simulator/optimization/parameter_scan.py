@@ -1,7 +1,7 @@
-"""OFAT or full-factorial sweeps. No invented detection/stability objective.
+"""One-at-a-time and full-factorial parameter sweeps.
 
-Resistive electric/EOF states are recomputed per voltage. Gas pressure still
-does not feed back into internal flow. Stress numbers are not stability scores.
+Voltage changes recompute resistive and electroosmotic fields. Internal liquid
+flow excludes gas-pressure feedback; stress is reported as a physical observable.
 """
 from copy import deepcopy
 from itertools import product

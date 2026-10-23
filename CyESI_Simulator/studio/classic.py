@@ -1,7 +1,6 @@
-"""Preserve the original 2-D figures and Pillow visual laboratory.
+"""Render 2D figures and saved-response playback.
 
-These read existing numerical responses. Their old response-replay clock is
-labelled separately from Studio's continuous population clock.
+Response playback and continuous-population playback use separate clocks.
 """
 from __future__ import annotations
 from copy import deepcopy
@@ -27,7 +26,7 @@ LABELS={
 
 def source_scene(service):
     with service.lock:scene=service._scenes.get('2d')
-    if scene is None:raise ValueError(' Load or compute axisymmetric results ,  Then open the figure gallery ')
+    if scene is None:raise ValueError("Load or compute an axisymmetric solution before opening the figure gallery.")
     return scene
 
 
@@ -67,7 +66,7 @@ def render_scene(service,options):
     from ..scene3d.server import _number
     scene=source_scene(service)
     page=options.get('page','device')
-    if page not in ('device','nozzle'):raise ValueError(' Unknown 2D view ')
+    if page not in ('device','nozzle'):raise ValueError("Unknown 2D view")
     width=int(_number(options.get('width',1280),'image width',900,1800))
     height=int(_number(options.get('height',760),'image height',560,1200))
     progress=_number(options.get('progress',.78),'replay progress',0.,1.)
@@ -77,8 +76,7 @@ def render_scene(service,options):
     explanation=options.get('explanation','false') in ('true','1',True)
     settings=ExplanationSettings(**{name:_number(options[name],name,0. if name!='jet_diameter_um' else .01,1e6)
         for name in ExplanationSettings.__dataclass_fields__ if name in options}).validate()
-    # Image generation is serialized because the original renderer owns its
-    # Pillow canvas and small field caches. It never solves new physics.
+    # Serialize rendering because Pillow canvases and field caches are shared.
     if not hasattr(service,'classic_render_lock'):service.classic_render_lock=RLock()
     with service.classic_render_lock:
         if not hasattr(service,'classic_renderers'):service.classic_renderers={}
@@ -101,7 +99,7 @@ def demonstration(service,options):
     from ..scene3d.data import _clean
     scene=source_scene(service)
     selected=options.get('id',scene.model.default_event)
-    if selected is None:raise ValueError(' No cell event in the current source ')
+    if selected is None:raise ValueError("No cell event in the current source")
     event=scene.event(selected);track=scene.model.tracks[event['trajectory_index']]
     p=ExplanationSettings(**{name:_number(options[name],name,0. if name!='jet_diameter_um' else .01,1e6)
         for name in ExplanationSettings.__dataclass_fields__ if name in options}).validate()

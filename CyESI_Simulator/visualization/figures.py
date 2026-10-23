@@ -1,4 +1,4 @@
-"""Source-backed plots. Labels explicitly separate prediction from assumptions."""
+"""Plots of solver fields, cell paths and acquisition results."""
 from pathlib import Path
 from functools import wraps
 from threading import RLock

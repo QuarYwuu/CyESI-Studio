@@ -1,7 +1,7 @@
-"""Conditional charged carrier flight and binary-solvent evaporation.
+"""Charged-carrier flight with binary-solvent evaporation.
 
-No child droplets are invented: Rayleigh instability, loss of the coating or
-loss of the membrane continuum terminates the corresponding prediction.
+Tracking ends at Rayleigh instability, loss of the coating or loss of the
+membrane continuum. Daughter droplets are outside this model.
 """
 import numpy as np
 from scipy.optimize import brentq

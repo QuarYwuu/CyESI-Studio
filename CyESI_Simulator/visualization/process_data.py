@@ -1,8 +1,7 @@
-"""One identity-preserving continuous stream through saved transport responses.
+"""Continuous cell events assembled from saved transport responses.
 
-The movie resamples only saved, spatially resolved responses. Ensemble rates
-still use the full response population. C-trap packets are an explicit timing
-scenario, never inferred from rigid-sphere dimensions or inlet flight time.
+Animation uses stored spatial responses; ensemble rates use the full response
+population. C-trap signal widths are supplied by the acquisition scenario.
 """
 from copy import deepcopy
 from dataclasses import dataclass, asdict
@@ -32,11 +31,11 @@ class ProcessParameters:
     startup: str = 'steady'
 
     def validate(self, p):
-        if self.resolution not in (17500,35000,70000,140000):raise ValueError(' Unsupported resolution ')
-        if not np.isfinite([self.duration_s,self.actual_it_ms,self.packet_delay_ms]).all():raise ValueError(' Parameter must be finite ')
-        if not 0 < self.duration_s <= 3600:raise ValueError(' Observation duration must be in  0–3600 s  Range ')
-        if not 0 < self.actual_it_ms <= p.max_injection_time_ms:raise ValueError(' Actual  IT  Must exceed  0  And at most  Maximum IT')
-        if self.packet_delay_ms < 0 or self.startup not in ('steady','empty'):raise ValueError(' Invalid delay or startup mode ')
+        if self.resolution not in (17500,35000,70000,140000):raise ValueError("Unsupported resolution.")
+        if not np.isfinite([self.duration_s,self.actual_it_ms,self.packet_delay_ms]).all():raise ValueError("Parameters must be finite.")
+        if not 0 < self.duration_s <= 3600:raise ValueError("Observation duration must be between 0 and 3600 s.")
+        if not 0 < self.actual_it_ms <= p.max_injection_time_ms:raise ValueError("Actual accumulation time must be positive and no greater than the maximum.")
+        if self.packet_delay_ms < 0 or self.startup not in ('steady','empty'):raise ValueError("Invalid delay or startup mode.")
         return self
 
 
@@ -95,11 +94,11 @@ def classify_packets(onsets, event_ids, delivered, row, p, cohort):
 
 class ProcessModel:
     def __init__(self,data,acquisition=None,parameters=None):
-        if data.rate_preview:raise ValueError(' Flow rate changed :  Run the flow solver first ,  To update capillary and focusing playback .')
+        if data.rate_preview:raise ValueError("Flow rate changed. Run the flow solver to update capillary and focusing playback.")
         self.data=data;self.acquisition=deepcopy(acquisition or AcquisitionParameters()).validate()
         self.parameters=deepcopy(parameters or ProcessParameters()).validate(self.acquisition)
         self.row=timing(self.parameters.resolution,self.parameters.actual_it_ms,self.acquisition)
-        if self.acquisition.signal_width_ms>60000:raise ValueError(' Maximum packet width in the process view  60 s;  Use acquisition analysis for longer packets .')
+        if self.acquisition.signal_width_ms>60000:raise ValueError("The process view supports signal widths up to 60 s. Use acquisition analysis for longer signals.")
         self.tracks=[data.track(i) for i in range(len(data.ids))]
         self.delays=np.array([track['end_time'] for track in self.tracks])
         saved_exits=np.array([track['z'][-1]>=-1e-9 for track in self.tracks])
@@ -118,21 +117,19 @@ class ProcessModel:
         self.projection_direction=vector/np.linalg.norm(vector)
         self.local_y=[]
         for i,track in enumerate(self.tracks):
-            # A complete long-tube history is required to claim a computed
-            # upstream trajectory; legacy straight-line substitutes stay flagged.
+            # Use recorded bulk histories for upstream paths; label geometric substitutes separately.
             for j,z in enumerate(self.stage_z):
                 cross=np.flatnonzero(track['z']>=z-1e-12)
                 if len(cross):
                     k=int(cross[0]);self.crossing[i,j]=track['t'][0] if k==0 else np.interp(z,track['z'][k-1:k+1],track['t'][k-1:k+1])
             self.local_y.append(self._local_y(i))
         self.has_bulk='bulk_trajectory_time_s' in data.fields
-        # A fixed guard supports up to 60 s packets. Changing method settings
-        # must not shift the source train or reassign an event's trajectory.
+        # A fixed 60 s guard keeps source events and assigned trajectories stable across method changes.
         preroll=max(self.delays)+60. if self.parameters.startup=='steady' else 0.
         width=self.acquisition.signal_width_ms*.001;cycle=self.row['record_cycle_ms']*.001
         horizon=self.parameters.duration_s+width+cycle
         if self.source_rate*(preroll+horizon+width+cycle)>100000:
-            raise ValueError(' Display event count exceeds  10  Ten thousand ,  Reduce the observation duration ;  Theoretical rates remain available .')
+            raise ValueError("More than 100000 display events. Shorten the observation duration.")
         self.stream=ContinuousCellStream(self.source_rate,self.delays,self.exited,
              seed=data.config.numerics.seed+101,start_time=-preroll)
         self.records=self.stream.extend(horizon)
@@ -169,7 +166,7 @@ class ProcessModel:
         y=-(self.projection_direction[0]*f['bulk_trajectory_x_m'][:,j][unique]
             +self.projection_direction[1]*f['bulk_trajectory_y_m'][:,j][unique])
         # Tip solver is axisymmetric, so only |r| is resolved after the bulk.
-        # Preserve the last meridional projection, without claiming azimuthal CFD.
+        # Use the last meridional projection for display.
         end_r=np.hypot(f['bulk_trajectory_x_m'][-1,j],f['bulk_trajectory_y_m'][-1,j])
         projected=track['r']*y[-1]/max(end_r,1e-30)
         return np.where(track['t']<=t[-1],np.interp(track['t'],t,y),projected)
@@ -236,7 +233,7 @@ def selected_flight(model,event_id,parameters=None):
     from ..cell_state.flight import fly
     p=deepcopy(parameters or StateParameters()).validate()
     index=int(model.records['template_id'][event_id])
-    if not model.exited[index]:raise ValueError(' Selected trajectory has not exited ,  Carrier transfer requires an outlet state ')
+    if not model.exited[index]:raise ValueError("The selected trajectory has not exited. Carrier transfer requires an outlet state.")
     # Use the middle listed scenario, record every assumption in the export.
     middle=lambda values:values[len(values)//2]
     permeability=middle(p.methanol_permeabilities_m_s);dissolution=middle(p.dissolution_rates_s)

@@ -1,8 +1,7 @@
-"""Counter-based, shared Wiener-path approximation for adaptive comparisons.
+"""Counter-based Wiener paths for comparisons of adaptive time steps.
 
-The finite Levy-Ciesielski expansion matches one per-event thermal path across
-different adaptive time steps. It is independent free-space noise, NOT the
-correlated wall/FDT noise of a confined mobility matrix.
+A finite Levy-Ciesielski expansion supplies the same free-space noise path
+for each event. Wall-correlated fluctuation-dissipation noise is excluded.
 """
 import numpy as np
 

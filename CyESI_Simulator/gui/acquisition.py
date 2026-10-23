@@ -1,4 +1,4 @@
-"""Interactive, inexpensive acquisition estimates; no CFD rerun required."""
+"""Acquisition controls and rate estimates."""
 from dataclasses import fields
 from datetime import datetime
 from pathlib import Path

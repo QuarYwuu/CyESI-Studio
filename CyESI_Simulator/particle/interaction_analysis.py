@@ -1,4 +1,4 @@
-"""Observation-window outcomes; never fit global Poisson theory to one movie."""
+"""Cell-source outcomes within a finite observation window."""
 import numpy as np
 from ..visualization.process_data import classify_packets
 

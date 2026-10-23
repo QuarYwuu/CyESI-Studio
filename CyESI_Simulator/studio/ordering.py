@@ -1,4 +1,4 @@
-"""Shared 2-D/3-D long-capillary population workflow and inspectable artifacts."""
+"""Long-capillary population studies and saved study records."""
 from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
@@ -64,9 +64,9 @@ def run(service,body):
             return None
         return service.start('ordering',clear)
     scene,_=service.snapshot()
-    if set(body)-set(CollectiveParameters.__dataclass_fields__):raise ValueError(' Unknown population parameter ')
+    if set(body)-set(CollectiveParameters.__dataclass_fields__):raise ValueError("Unknown population parameter")
     p=CollectiveParameters(**body).validate()
-    if p.start_s+p.duration_s>scene.model.parameters.duration_s:raise ValueError(' Study window exceeds source duration ')
+    if p.start_s+p.duration_s>scene.model.parameters.duration_s:raise ValueError("Study window exceeds source duration")
     fingerprint=source_signature(scene,p)
     key=digest(dict(model_version=2,source=fingerprint,parameters=p.to_dict()))
     def work(progress):
@@ -124,7 +124,7 @@ def catalog(service):
 def load(service,record_id):
     row=next((r for r in catalog(service) if r['id']==record_id),None)
     scene,_=service.snapshot()
-    if row is None or row['source_id']!=scene.source_id:raise ValueError(' Record does not match the current experiment ;  Load the corresponding simulation ')
+    if row is None or row['source_id']!=scene.source_id:raise ValueError("This record belongs to another experiment. Load the corresponding simulation.")
     root=(service.studio_root/record_id).resolve()
     def work(progress):
         progress(' Verifying record hashes and source events ')
@@ -134,10 +134,10 @@ def load(service,record_id):
             if not path.is_relative_to(root) or not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest()!=entry['sha256']:
                 raise ValueError(' Population record integrity check failed : '+name)
         study=CollectiveResult.load(root)
-        if study.parameters.start_s+study.parameters.duration_s>scene.model.parameters.duration_s:raise ValueError(' Extend the source duration first ')
+        if study.parameters.start_s+study.parameters.duration_s>scene.model.parameters.duration_s:raise ValueError("Extend the source duration first")
         mask=np.asarray(scene.model.records['injection_s'])<study.parameters.start_s+study.parameters.duration_s
         if not np.array_equal(study.event_ids,np.asarray(scene.model.records['event_id'])[mask]) or not np.array_equal(study.injection_s,np.asarray(scene.model.records['injection_s'])[mask]):
-            raise ValueError(' Source seed or warm-up does not match the record ')
+            raise ValueError("Source seed or warm-up does not match the record")
         study.diagnostics['source_fingerprint']=source_signature(scene,study.parameters)
         study.record=str(root);study.files=[dict(name=name,url=f'/ordering-files/{root.name}/{name}') for name in record['files']]
         progress(' Loading verified population record ,  Using the current ')
@@ -203,7 +203,7 @@ def _figures(study,root,config):
 def frame(service,time_s):
     from ..fluid.supply import segments
     scene,_=service.snapshot();study=current(service)
-    if study is None:raise ValueError(' Compute a population study for this source ')
+    if study is None:raise ValueError("Compute a population study for this source")
     start=scene.data.config.geometry.inner_tip-scene.data.config.geometry.sample_length_mm*.001
     result=dict(source_id=study.source_id,time_s=float(time_s),range_s=[float(study.time_s[0]),float(study.time_s[-1])],
         coupled=study.frame(time_s),independent=study.frame(time_s,True),

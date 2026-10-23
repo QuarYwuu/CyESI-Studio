@@ -1,4 +1,4 @@
-"""Export independently inspectable timing assumptions and theoretical rates."""
+"""Export acquisition settings, rates and event records."""
 from pathlib import Path
 import html
 import json

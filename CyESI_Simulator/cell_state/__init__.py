@@ -1,5 +1,5 @@
-"""Conditional lipid-shell / carrier-droplet states at an MS entrance plane.
+"""Reduced membrane and carrier-droplet models at the MS entrance.
 
-This reduced model is separate from the validated transport kernel. Scenario
-parameters are not experimental calibrations or an ion-detection model.
+Transport histories supply solvent exposure. Kinetic and carrier parameters
+are prescribed inputs; this model does not calculate ion detection efficiency.
 """

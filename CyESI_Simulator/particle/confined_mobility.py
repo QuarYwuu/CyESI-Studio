@@ -1,10 +1,8 @@
-"""Passive, reduced many-body mobility for a locally straight circular tube.
+"""Reduced many-body mobility in a locally straight circular tube.
 
-No preferred spacing or ordering force is prescribed. The disturbance solves
-Stokes no-slip collocation on a finite cylindrical side wall. Its blob mobility
-is congruently calibrated to the existing finite-sphere self wall mobility.
-Pair squeeze resistance is added in resistance space, keeping dissipation >=0.
-This is a reduced, finite-wall approximation, not surface-resolved capsule CFD.
+Stokes collocation enforces no slip on a finite cylindrical wall. Blob mobility
+is calibrated to the single-sphere wall mobility. Pair squeeze resistance is
+added in resistance space with nonnegative dissipation. Membranes are unresolved.
 """
 from __future__ import annotations
 import numpy as np
@@ -125,9 +123,7 @@ class TubeKernel:
             extra-=np.trace(extra,axis1=1,axis2=2)[:,None,None]*np.eye(3)/3
         out=stresslet_velocity(x,x,E+extra,self.R,self.epsilon)
         if wall:
-            # Subtract each rigid self image: the coarse finite wall must not
-            # create apparent rigid-sphere Stokes lift from end/discretization
-            # errors. Deformation-generated normal stresses retain self images.
+            # Subtract each sphere's self-image to avoid duplicate wall self-mobility.
             cw=matrix(green(x,self.wall,self.mu,self.epsilon))
             for j in range(n):
                 uw=stresslet_velocity(self.wall,x[j:j+1],(E+extra)[j:j+1],self.R,self.epsilon)

@@ -1,4 +1,4 @@
-"""Module orchestration; no GUI imports, plotting or hidden parameter changes."""
+"""Run the flow, solvent, electrical and transport solvers."""
 from dataclasses import dataclass
 import numpy as np
 from .config import Config

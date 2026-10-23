@@ -1,7 +1,7 @@
-"""Read-only analyses and export for the unified workspace.
+"""Read-only analysis views and result export.
 
-Every page reads the current scene/model. Changing pages never launches a CFD
-job or regenerates the continuous feed. Expensive studies are explicit jobs.
+Views use the current scene. Solver runs and parameter studies are submitted
+as background jobs.
 """
 from __future__ import annotations
 
@@ -122,7 +122,7 @@ def get_analysis(service,kind='overview'):
             saved=archived_study(service,kind)
         return _clean(saved or dict(kind=kind,computed=False,rows=[],notes=[' Run a parameter study to view results .']))
     readers=dict(overview=overview,acquisition=acquisition,quality=quality,interactions=interactions)
-    if kind not in readers:raise ValueError(' Unknown analysis page ')
+    if kind not in readers:raise ValueError("Unknown analysis page")
     if not hasattr(service,'analysis_cache'):service.analysis_cache={}
     key=(revision,kind)
     with service.lock:cached=service.analysis_cache.get(key)

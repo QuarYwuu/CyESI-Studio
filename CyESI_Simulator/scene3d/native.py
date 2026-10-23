@@ -1,4 +1,4 @@
-"""Bridge independent Cartesian fields and finite-sphere responses to the viewer."""
+"""Connect Cartesian field solutions to cell transport and continuous feeds."""
 from __future__ import annotations
 
 from copy import deepcopy
@@ -244,12 +244,10 @@ class NativeSceneData(SceneData):
 
 
 def build_native_scene(base,path,volume,settings=None,progress=lambda value:None,config=None):
-    """Build one continuous feed from the new fields without changing old data.
+    """Build a continuous feed from solved Cartesian fields.
 
-    ``config`` should be the actual flow operating point used to solve volume.
-    With no config, volume's recorded inlet flow takes precedence over the
-    reference source flow. ``settings`` may provide independent particle_count
-    and saved_trajectories; defaults are 128/64 response samples.
+    Use the solved flow operating point in config. Otherwise, the recorded volume
+    inlet flow takes precedence. Defaults use 128 cell responses and 64 saved paths.
     """
     from .version import solver_fingerprint
     volume.diagnostics.setdefault('model_fingerprint',solver_fingerprint())

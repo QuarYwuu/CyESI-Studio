@@ -1,8 +1,7 @@
-"""Common flat-view contract for saved axisymmetric and native Cartesian fields.
+"""Flat views of axisymmetric and Cartesian fields.
 
-An offset cut of an axisymmetric field is a reconstruction, clearly labelled.
-No interpolation joins liquid, quartz and gas cells. Native cuts retain their
-original solver and material masks.
+Offset cuts of axisymmetric fields are labelled reconstructions. Material
+masks separate liquid, quartz and gas.
 """
 from __future__ import annotations
 
@@ -40,7 +39,7 @@ def _extra_scale(values, active, name):
 
 
 def _cells(array, re, ze, r, z, active=None):
-    """Piecewise constant on the archive's own grid; never extrapolate."""
+    """Sample cell-constant values on the stored grid."""
     re, ze, array = np.asarray(re), np.asarray(ze), np.asarray(array)
     if array.shape != (len(re)-1, len(ze)-1):
         raise ValueError('Archived field dimensions do not match its physical grid')
@@ -66,11 +65,11 @@ def _ions(data):
 
 def _history(phase, names, selected):
     name=next((key for key in names if key in phase),None)
-    if name is None: raise ValueError(' Selected field is absent from this interface record ,  Run an interface transient ')
+    if name is None: raise ValueError("This field is absent from the interface record. Run an interface transient.")
     raw=np.asarray(phase[name])
     if raw.ndim==3: return raw[selected]
     if raw.ndim==2 and selected==len(phase['time_s'])-1: return raw
-    raise ValueError(' This record contains the final field only ,  Earlier snapshots unavailable ')
+    raise ValueError("Only the final field was saved; earlier snapshots are unavailable.")
 
 
 def _native_extra(scene, field, axis, position_m, clock, phase_frame, time_s):
@@ -88,10 +87,10 @@ def _native_extra(scene, field, axis, position_m, clock, phase_frame, time_s):
         grid=volume.grid; material=volume.material; velocity=volume.velocity; electric=volume.electric
         composition=volume.methanol
     if field=='charge_density':
-        if clock!='phase': raise ValueError(' Free charge density uses the interface charge solution ,  Select the interface clock ')
+        if clock!='phase': raise ValueError("Free-charge density uses the interface solution. Select the interface clock.")
         values=phase.charge_density_c_m3[selected]
     elif field=='liquid_fraction':
-        if clock!='phase': raise ValueError(' Liquid fraction uses the two-phase solution ,  Select the interface clock ')
+        if clock!='phase': raise ValueError("Liquid fraction uses the two-phase solution. Select the interface clock.")
         values=phase.liquid_fraction[selected]
     else:
         from scipy.ndimage import distance_transform_edt
@@ -100,7 +99,7 @@ def _native_extra(scene, field, axis, position_m, clock, phase_frame, time_s):
         if cache is None:scene._studio_derived_fields=cache={}
         if key not in cache:
             liquid=material==1
-            if not liquid.any(): raise ValueError(' Liquid stress unavailable at this time ')
+            if not liquid.any(): raise ValueError("Liquid stress is unavailable at this time.")
             nearest=distance_transform_edt(~liquid,return_distances=False,return_indices=True)
             filled=np.asarray(velocity)[tuple(nearest)]
             gradients=np.stack([np.stack(np.gradient(filled[...,j],*grid.centers,edge_order=1),axis=-1)
@@ -131,22 +130,22 @@ def _native_extra(scene, field, axis, position_m, clock, phase_frame, time_s):
 
 def field_slice(scene, field='methanol', axis='x', position_m=0., clock='volume',
                 phase_frame=-1, time_s=None):
-    if field not in FIELD_INFO: raise ValueError(' Unknown field or clock ')
+    if field not in FIELD_INFO: raise ValueError("Unknown field or clock")
     if hasattr(scene, 'volume'):
         if field not in CORE_FIELD_INFO:
             return _native_extra(scene,field,axis,position_m,clock,phase_frame,time_s)
         return scene_slice(scene, field, axis, position_m, clock, phase_frame, time_s)
     if axis not in ('x', 'y', 'z') or not np.isfinite(position_m):
-        raise ValueError(' Invalid section axis or position ')
+        raise ValueError("Invalid section axis or position")
     if clock not in ('volume', 'phase'):
-        raise ValueError(' Unknown field or clock ')
+        raise ValueError("Unknown field or clock")
     if field == 'electric_velocity':
-        raise ValueError(' Voltage differences require two axisymmetric solutions ')
+        raise ValueError("Voltage differences require two axisymmetric solutions")
     data=scene.data; f=data.fields; selected=None; field_time=None
     electric=field in ('electric', 'potential')
     phase=data.spray if clock == 'phase' else None
     if clock == 'phase' and phase is None:
-        raise ValueError(' No interface transient in this record ;  Enable the two-phase solver and run ')
+        raise ValueError("No interface transient is saved. Enable the two-phase solver and run a calculation.")
     if phase is not None:
         re=np.asarray(phase['radial_edges_m']); ze=np.asarray(phase['axial_edges_m'])
         selected=int(np.clip(phase_frame if phase_frame>=0 else len(phase['time_s'])-1, 0, len(phase['time_s'])-1))
@@ -244,17 +243,17 @@ def field_slice(scene, field='methanol', axis='x', position_m=0., clock='volume'
         elif field=='methanol':values=np.asarray(f['methanol_fraction'])[ri,zi]
         elif field=='pressure':values=np.asarray(f['pressure_pa'])[ri,zi]
         elif field=='shear':
-            if 'equivalent_stress_pa' not in f:raise ValueError(' Stress field unavailable ;  Run axisymmetric transport ')
+            if 'equivalent_stress_pa' not in f:raise ValueError("Stress is unavailable. Run axisymmetric transport.")
             values=np.asarray(f['equivalent_stress_pa'])[ri,zi]
         elif field in ('charge_density','liquid_fraction'):
-            raise ValueError(' Variable from the interface transient ,  Select the interface clock ')
+            raise ValueError("This variable belongs to the interface transient. Select the interface clock.")
         elif field=='salt':
             ionic=_ions(data)
-            if ionic is None:raise ValueError(' Ion concentration unavailable ')
+            if ionic is None:raise ValueError("Ion concentration is unavailable.")
             name=next((k for k in ('salt_mol_m3','salt_concentration_mol_m3','salt') if k in ionic),None)
-            if name is None:raise ValueError(' Salt field unavailable ')
+            if name is None:raise ValueError("Salt concentration is unavailable.")
             values=_cells(ionic[name],ionic['radial_edges_m'],ionic['axial_edges_m'],r,z,ionic.get('active'))[0]
-        elif field=='gas_speed':raise ValueError(' Axisymmetric gas field uses the tip transient ,  Select the interface clock ')
+        elif field=='gas_speed':raise ValueError("The axisymmetric gas field uses the tip transient. Select the interface clock.")
     category=FIELD_INFO[field][2]
     enabled=inside & np.isfinite(values)
     if category=='liquid':enabled &= material==1

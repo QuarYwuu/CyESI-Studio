@@ -1,4 +1,4 @@
-"""Separate two-dimensional study records; original CFD archives stay read-only."""
+"""Save 2D interaction studies alongside their source records."""
 from pathlib import Path
 import hashlib
 import json

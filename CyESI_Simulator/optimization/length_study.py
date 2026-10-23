@@ -1,9 +1,8 @@
-"""Length/orientation/shear study with pressure-corrected resolved tip CFD.
+"""Tube-length, orientation and shear comparisons.
 
-Each flow-changing operating point recomputes the tip. Counterfactuals compare
-one force at a time, with identical inlet samples. A Poisson source delayed by
-independent residence times is still Poisson: transit dispersion is not used as
-an invented per-cell MS signal width.
+Each changed flow requires a new tip solution. Force comparisons use matched
+inlet samples. Independent residence delays preserve a Poisson arrival process;
+they are separate from the molecular contribution to signal duration.
 """
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field

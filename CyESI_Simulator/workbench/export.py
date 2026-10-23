@@ -59,7 +59,7 @@ def export_report(session,directory,progress=lambda s:None):
         feed=[] if r is None else [dict(event_id=int(i),injection_s=a,trajectory_sample_id=int(data.ids[k]),nozzle_s=b)
             for i,a,k,b in zip(r['event_id'],r['injection_s'],r['template_id'],r['nozzle_s'])]
         write_csv(root/'continuous_feed.csv',feed)
-        # Empty cohorts remain valid CSVs, rather than silently missing files.
+        # Write a CSV header for empty cohorts.
         for name,rows,columns in [('cell_event_ledger.csv',ledger,['event_id','packet_onset_s','status','scan_count','pure_scan_count','captured_fraction','pure_captured_fraction']),
                                   ('continuous_feed.csv',feed,['event_id','injection_s','trajectory_sample_id','nozzle_s'])]:
             if not rows:

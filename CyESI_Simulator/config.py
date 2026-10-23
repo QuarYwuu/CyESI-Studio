@@ -1,4 +1,4 @@
-"""Editable inputs. Public field names encode display units explicitly."""
+"""Configuration fields and their display units."""
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field, fields
@@ -71,7 +71,7 @@ class Cell:
     zeta_mv: float = -20.0
     clausius_mossotti: float = -0.5  # Assumed DC effective value, not a membrane model.
     brownian_below_um: float = 1.0
-    brownian_enabled: bool | None = None  # None preserves the historical size cutoff.
+    brownian_enabled: bool | None = None  # None uses the default size cutoff.
     gravity_z: float = 0.0  # Orientation unspecified; sedimentation disabled.
     focusing_radius_um: float = 25.0
 
@@ -148,7 +148,7 @@ class Events:
 
 @dataclass
 class Supply:
-    # Legacy files retain flow control. pressure_400mbar.json is the user's setup.
+    # Flow control is the default; pressure control solves the supply network.
     sample_control: str = "flow"
     sample_pressure_mbar: float = 400.0  # reservoir gauge pressure, atmosphere reference
     outlet_pressure_pa: float = 0.0  # imposed external liquid traction offset

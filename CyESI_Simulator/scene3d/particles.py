@@ -1,9 +1,8 @@
-"""Finite-radius cell transport through native Cartesian tip fields.
+"""Finite-radius cell transport through Cartesian tip fields.
 
-The upstream extension reuses the established segmented developed-pipe model.
-The resolved tip samples all three independently solved velocity and electric
-components. This is a dilute, rigid, overdamped sphere closure; it does not
-resolve a deforming membrane, hydrodynamic cell-cell interaction or Dean flow.
+A segmented Poiseuille model supplies upstream transport. The tip uses all
+three velocity and electric-field components. Cells are dilute, rigid and
+overdamped; membrane deformation, pair interactions and Dean flow are excluded.
 """
 from __future__ import annotations
 
@@ -42,8 +41,7 @@ def simulate_native(config,volume,path=None,progress=lambda value:None):
     if native_entry<physical_entry-1e-10:
         raise ValueError('The native liquid inlet lies upstream of the physical sample tube entrance')
     # The gas-supply extent may move the Cartesian inlet upstream of the
-    # requested tip length. Match the developed extension to the actual native
-    # inlet, rather than counting that axial stretch twice.
+    # Match the upstream extension to the Cartesian inlet position.
     actual_resolved=cfg.geometry.inner_tip-native_entry
     if actual_resolved<=0:raise ValueError('Native liquid inlet must precede the inner capillary lip')
     cfg.geometry.tip_resolved_length_mm=actual_resolved*1000
@@ -69,7 +67,7 @@ def simulate_native(config,volume,path=None,progress=lambda value:None):
     axes=volume.grid.centers;lower=np.array([a[0] for a in axes]);upper=np.array([a[-1] for a in axes])
     liquid=volume.material==1
     # Gradients use nearest liquid values in solid/gas cells. Differentiating
-    # raw electric energy across a quartz mask would invent a DEP wall force.
+    # Restrict the energy gradient to fluid cells to avoid spurious wall forces.
     nearest=distance_transform_edt(~liquid,return_distances=False,return_indices=True)
     def fill(values):return np.asarray(values)[tuple(nearest)]
     electric=fill(volume.electric)

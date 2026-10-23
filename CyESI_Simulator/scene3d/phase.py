@@ -1,11 +1,9 @@
-"""Conservative, short-time native 3-D two-phase research solver.
+"""Transient Cartesian two-phase flow and charge transport.
 
-The same velocity and pressure field spans liquid and gas, transmitting viscous
-stress. Surface tension uses a continuum surface force; Maxwell stress is from
-an independently solved 3-D variable-permittivity potential. Free charge is
-advected conservatively and Ohmic relaxation is implicit. Contact-angle
-calibration, distributed lead/electrode dynamics and evaporation remain unresolved; a
-steady cone-jet prediction is not claimed.
+Liquid and gas share velocity and pressure fields. Surface tension uses a
+continuum surface force; Maxwell stress uses a variable-permittivity potential.
+Charge advection is conservative and Ohmic relaxation is implicit. Contact-line
+calibration, distributed electrode dynamics and evaporation are unresolved.
 """
 from __future__ import annotations
 

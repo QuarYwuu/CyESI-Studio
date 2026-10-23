@@ -7,9 +7,9 @@ import math
 @dataclass
 class StateParameters:
     instrument: str = "Q Exactive"
-    inlet_diameter_mm: float = .6  # user supplied; catalog bore is 0.58 mm
+    inlet_diameter_mm: float = .6  # Scenario bore; catalog value is 0.58 mm.
     transfer_tube_length_mm: float = 58.42  # Thermo part 70005-20606
-    inlet_wall_temperature_c: float = 320.0  # user supplied, NOT particle temperature
+    inlet_wall_temperature_c: float = 320.0  # Wall temperature.
     ambient_temperature_c: float = 25.0
     ambient_pressure_pa: float = 101325.0
     downstream_pressure_pa: float = 200.0  # approximate forevacuum, not Orbitrap UHV

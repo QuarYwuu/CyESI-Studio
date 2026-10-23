@@ -1,4 +1,4 @@
-"""Read-only catalog of old and new scientific study artifacts."""
+"""Catalog saved parameter and population studies."""
 from hashlib import sha256
 from pathlib import Path
 import json

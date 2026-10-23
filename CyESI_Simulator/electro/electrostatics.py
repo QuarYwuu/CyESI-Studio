@@ -74,7 +74,7 @@ def solve(config, ionic=None):
     liquid = (domains == Domain.SAMPLE) | (domains == Domain.SHEATH)
     eps[liquid] = config.chemistry.liquid_relative_permittivity
     volts = e.voltage_kv*1000
-    # Far radial boundary insulated: avoid an invented nearby grounded enclosure.
+    # Insulating outer radial boundary.
     A, rhs = elliptic(re, ze, eps, boundary={"z1": 0.})
     fixed = liquid if e.liquid_model in ("conducting", "resistive") else np.zeros(R.shape, bool)
     if e.liquid_model == "dielectric": fixed[:, 0] = liquid[:, 0]

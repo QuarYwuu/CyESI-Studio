@@ -1,13 +1,11 @@
-"""Experimental axisymmetric two-phase Navier-Stokes / conservative level set.
+"""Transient axisymmetric two-phase Navier-Stokes and level-set solver.
 
-MAC pressure projection, explicit variable-viscosity stress and convection,
-CSF surface tension including azimuthal curvature, Maxwell tensor traction
-with a moving dielectric field. The default electrical extension conserves
-advected free charge, implicitly relaxes Ohmic current and closes a remote RC
-supply. The original prescribed-potential approximation remains selectable.
-Annular nitrogen inlet uses an assumed developed hydraulic supply length.
-This is a transient research backend. Cone/jet/breakup are outcomes, never
-imposed. Mesh/time/contact-line sensitivity must precede quantitative use.
+Uses MAC pressure projection, variable-viscosity stress, continuum surface
+tension with azimuthal curvature, and Maxwell traction. Charge transport
+includes conservative advection, implicit Ohmic relaxation and an upstream RC
+supply. Prescribed-potential mode is also available. Nitrogen supply uses a
+developed-flow inlet approximation. Quantitative results require mesh, time-step
+and contact-line sensitivity analysis.
 """
 from dataclasses import dataclass
 import numpy as np

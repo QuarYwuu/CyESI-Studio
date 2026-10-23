@@ -1,4 +1,4 @@
-"""Native length / shear research workspace; CFD runs outside the Tk thread."""
+"""Tube-length and shear workspace with background flow calculations."""
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path

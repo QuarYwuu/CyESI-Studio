@@ -1,8 +1,8 @@
-"""Conservative spherical intracellular diffusion and thin lipid-shell RC.
+"""Spherical intracellular diffusion and a thin-shell RC model.
 
-Methanol fraction uses additive-volume, equal-volume water countertransport;
-this is a reduced incompressible mixture model. A generic neutral tracer is
-mass conservative. Lipid dissolution kinetics are explicit uncalibrated inputs.
+Methanol exchange assumes additive volumes and equal-volume water transport.
+The neutral tracer is mass conservative; lipid dissolution rates are
+uncalibrated scenario inputs.
 """
 from dataclasses import dataclass
 from copy import deepcopy

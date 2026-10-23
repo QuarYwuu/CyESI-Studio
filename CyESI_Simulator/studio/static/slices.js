@@ -1,5 +1,4 @@
-// A flat physical cut of native FV cells.  No 3-D display lens or cell-size
-// exaggeration is applied here; a cell appears only when its sphere intersects.
+// Slice cell-constant fields and finite spheres at their physical coordinates.
 const $=id=>document.getElementById(id);
 const fmt=(v,d=2)=>Number(v).toLocaleString('en-GB',{maximumFractionDigits:d});
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));

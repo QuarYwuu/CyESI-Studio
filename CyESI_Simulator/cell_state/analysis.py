@@ -1,4 +1,4 @@
-"""Join measured geometry, CFD exposure histories and explicit state scenarios."""
+"""Combine transport histories with membrane and inlet parameters."""
 from itertools import product
 from dataclasses import dataclass
 import numpy as np
@@ -86,11 +86,11 @@ def droplet_occupancy(cell_rate,drop_rate):
 
 def reweight_concentration(result,data):
     """Reuse independent carrier histories, recomputing all rate/occupancy terms."""
-    if getattr(data,'rate_preview',False):raise ValueError(' Sample flow changed ,  Update the source first  CFD,  Recompute membrane / Transfer responses for the updated state ')
+    if getattr(data,'rate_preview',False):raise ValueError("Sample flow changed. Recompute flow and transport before updating membrane and carrier states.")
     from dataclasses import replace
     from ..particle.events import concentration_only_change
     if not concentration_only_change(result.source_config,data.config):
-        raise ValueError(" Flow or transport parameters changed ,  Recompute cell state ")
+        raise ValueError("Flow or transport parameters changed. Recompute the cell state.")
     rates=outlet_rates(data.config,data.summary);incoming=rates['nozzle_cells_s']
     rows=[]
     for original in result.rate_cases:
@@ -131,7 +131,7 @@ def pre_nozzle(data,index,shell,keep_history=False):
 
 
 def analyze(data,parameters=None,progress=lambda text:None):
-    if getattr(data,'rate_preview',False):raise ValueError(' Sample flow changed ,  Recompute flow and transport first ,  Then compute membrane state ')
+    if getattr(data,'rate_preview',False):raise ValueError("Sample flow changed. Recompute flow and transport before the membrane state.")
     p=(parameters or StateParameters()).validate()
     rc=data.config.cell.diameter_um*.5e-6
     if min(p.drop_radii_um)*1e-6<=rc:raise ValueError("Every carrier radius must exceed the cell radius")

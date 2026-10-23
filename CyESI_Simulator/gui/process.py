@@ -225,7 +225,7 @@ class ProcessWindow:
             points=[v for z,y in zip(tr['z'][keep],m.local_y[k][keep]) for v in (sx(z),sy(y))]
             if len(points)>=4:c.create_line(*points,fill='#bbcfdf',width=1)
         live=[p for p in positions if p['z_m']<=g.inner_tip]
-        # Preserve the tag when limiting drawing density, without changing counts.
+        # Include the selected event in the decimated display.
         shown=live[::max(1,len(live)//250)];selected=[p for p in live if p['event_id']==tag]
         for p in shown+selected:
             x=sx(p['z_m']);y=sy(p['y_m']);r=7 if p['event_id']==tag else 3.5

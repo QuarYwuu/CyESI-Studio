@@ -1,1 +1,1 @@
-"""Independent workbench services; legacy interfaces keep their own state."""
+"""Simulation state and services for the native workbench."""

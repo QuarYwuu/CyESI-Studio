@@ -1,7 +1,7 @@
 """Conditional cone-jet current scale, separate from prescribed-current CFD.
 
 I = alpha sqrt(gamma K Q) is a steady cone-jet regime estimate, not an onset
-criterion or a charge-conserving transient prediction. See docs/SCENE3D.md.
+criterion. Transient current is calculated by the charge-transport solver.
 """
 from __future__ import annotations
 import math
@@ -11,12 +11,11 @@ COEFFICIENT_SOURCE = 'https://doi.org/10.1017/jfm.2025.10410'
 
 
 def estimate_current(config, alpha=2.47):
-    """Return an explicitly conditional SI estimate without fitting user current.
+    """Estimate jet current from prescribed conductivity and geometry.
 
-    The supporting sheath conductivity is only a proxy for the effective jet
-    conductivity. It is not a measured mixture conductivity. The range 0.2--1
-    microampere is compared after prediction; it never sets alpha or K here.
-    No estimate is clipped to the ohmic supply limit and passed off as valid.
+    Sheath conductivity approximates the effective jet conductivity. The
+    0.2-1 microampere range is a comparison after prediction. The ohmic supply
+    limit is reported separately.
     """
     alpha=float(alpha)
     if not math.isfinite(alpha) or alpha<=0:

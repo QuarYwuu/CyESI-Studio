@@ -1,9 +1,8 @@
-"""Identity-preserving 3-D reconstruction of saved CyESI numerical responses.
+"""Reconstruct 3D views from saved transport responses.
 
-This adapter does not call a CFD solver.  Long-pipe transverse coordinates are
-the saved x/y histories; axisymmetric tip responses retain the last bulk
-azimuth.  A revolved axisymmetric field is explicitly not a native 3-D solve.
-All public coordinates and lengths use SI metres, in x/y/z order.
+Bulk coordinates use recorded x/y histories; axisymmetric tip paths retain
+the last bulk azimuth. Revolved fields remain axisymmetric reconstructions.
+Coordinates are SI metres in x/y/z order.
 """
 from __future__ import annotations
 
@@ -20,7 +19,7 @@ from ..cell_state.parameters import StateParameters
 
 
 def _clean(value):
-    """JSON standard values only: unresolved NaN/Inf is null, never fabricated."""
+    """Convert nonfinite values to JSON null."""
     if isinstance(value, dict):
         return {str(k): _clean(v) for k, v in value.items()}
     if isinstance(value, (list, tuple, np.ndarray)):
@@ -103,11 +102,7 @@ class SceneData:
         self.path=path
 
     def set_path(self,path):
-        """Set display coordinate mapping only, without changing solved fields.
-
-        A new native run must recompute transport under the route's gravity.
-        Merely assigning a curve never claims those dynamics were recomputed.
-        """
+        """Set the display mapping. Route-dependent dynamics require a new solve."""
         self.path=path;self._geometry.clear();self._flights.clear()
 
     def _global(self,xyz):
@@ -205,8 +200,7 @@ class SceneData:
             for i in range(0,C.shape[0],stride_r):
                 for j in range(0,C.shape[1],stride_z):
                     if not active[i,j] or not np.isfinite(C[i,j]):continue
-                    # Keep original-cell footprints when downsampling: do not
-                    # bridge a masked solid wall with a coarse rectangle.
+                    # Include the selected cell when decimating display footprints.
                     r0,r1=re[i:i+2];z0,z1=ze[j:j+2];k=len(pos)//3
                     pts=np.array([[r0,z0],[r1,z0],[r1,z1],[r0,z1]])
                     pos.extend(np.c_[pts[:,0]*np.cos(angle),pts[:,0]*np.sin(angle),pts[:,1]].ravel().tolist())
@@ -269,7 +263,7 @@ class SceneData:
                    'Sheath tube is drawn only over the known upstream electrical-contact distance; total sheath length is unspecified.',
                    'Each displayed phase patch is revolved from the computed phi=0.5 contour, not a prescribed cone.']))
         self._geometry[phase_frame]=result
-        # Keep only a few assembled phase geometries in memory.
+        # Bound the phase-geometry cache.
         if len(self._geometry)>4:self._geometry.pop(next(iter(self._geometry)))
         return result
 

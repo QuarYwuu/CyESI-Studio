@@ -1,7 +1,7 @@
-"""Compiled deterministic sphere characteristics; same step and force model.
+"""Compiled deterministic sphere tracking with the reference force model.
 
-No fast-math or reduced precision. Independent cells use prange. Stochastic
-Brownian paths retain the NumPy reference and its existing RNG stream.
+Cells run in parallel at full precision. Brownian paths use the NumPy
+integrator and its random stream.
 """
 import math
 import os

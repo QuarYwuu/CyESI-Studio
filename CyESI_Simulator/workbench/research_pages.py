@@ -247,4 +247,4 @@ class LibraryPage(tk.Frame):
         self.notes.set(f' Current source : {s.data.source if s.data else "尚未载入"}\n'
             f'会话复用: 文件命中 {cache["files"].get("hit",0)}; 过程模型命中 {cache["process"].get("hit",0)}; '
             f'采集分析命中 {cache["acquisition"].get("hit",0)}.\n'
-            '已有数值模型, 专题研究和原图仍可访问.物理与仪器校准限制见 docs/PHYSICS_STATUS.md.')
+            'See README.md for installation, usage and acquisition-model scope.')

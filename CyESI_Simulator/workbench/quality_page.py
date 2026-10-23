@@ -1,4 +1,4 @@
-"""Inspectable numerical checks and limits of the coupled model."""
+"""Numerical diagnostics and model-scope summaries."""
 from pathlib import Path
 import json
 import tkinter as tk

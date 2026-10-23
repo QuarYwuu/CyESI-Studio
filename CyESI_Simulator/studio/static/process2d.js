@@ -1,5 +1,4 @@
-// Flat process drawings reuse the exact continuous feed, physical clock,
-// finite-sphere coordinates and solved arrays already used by the 3-D view.
+// Draw the continuous feed using the same time and coordinates as the 3D view.
 const $=id=>document.getElementById(id),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const fmt=(v,d=2)=>Number.isFinite(Number(v))?Number(v).toLocaleString('en-GB',{maximumFractionDigits:d}):'—';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

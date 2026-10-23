@@ -1,4 +1,4 @@
-"""One solved record, an independent editable draft, and reusable view models."""
+"""Solved records, editable parameters and cached view models."""
 from collections import OrderedDict,Counter
 from concurrent.futures import Future
 from copy import deepcopy
@@ -21,8 +21,7 @@ class Memo:
     def __init__(self,limit=4):
         self.limit=limit;self.values=OrderedDict();self.stats=Counter();self.lock=threading.RLock();self.inflight={}
     def get(self,key,fn):
-        # Work on one missing key must not block ready values used by the UI.
-        # Futures still coalesce a report/export and a view requesting one key.
+        # Share in-flight calculations by cache key without blocking ready views.
         with self.lock:
             if key in self.values:
                 self.stats['hit']+=1;self.values.move_to_end(key);return self.values[key]
@@ -127,11 +126,9 @@ class WorkbenchSession:
             self.selected_event=None
 
     def _rate_view(self,value):
-        """Change dilute source rates without eagerly materializing a feed train.
+        """Update source rates and defer finite-event generation to the view worker.
 
-        The shared ProcessModel builds its own identity-preserving finite
-        realization in the view worker. Old finite-window counts cannot be
-        scaled and are therefore withheld until that realization is ready.
+        Finite-window counts are recomputed from the updated event realization.
         """
         base=self.base
         if value==base.config.cell.concentration_per_ml and self._event_key==digest(base.config.events.__dict__):return base
@@ -176,11 +173,9 @@ class WorkbenchSession:
         return self.models.peek(key)
 
     def accept_views(self,result,key):
-        """Keep the displayed model alive independently of bounded study caches.
+        """Retain the displayed model while background tasks and caches change.
 
-        A late worker result cannot replace the model of newer UI inputs.
-        Retaining one accepted model also prevents an export or stale task from
-        causing a supposedly ready animation to rebuild on the Tk thread.
+        Results from older inputs cannot replace the accepted view model.
         """
         if key!=self.view_key() or result is None:return False
         self._accepted_model=result.get('model');self._accepted_process_key=self._process_key()

@@ -1,9 +1,8 @@
-"""Conditional charged lipid-carrier flight in three Cartesian dimensions.
+"""Charged-carrier flight in Cartesian gas and electric fields.
 
-This reuses the established shell/evaporation material closures, but advances
-all three carrier velocity/position components in the native gas and electric
-background. Carrier formation, charge allocation and cell-drop association are
-assumptions. A frozen gas field plus suction is not a coupled inlet gas solve.
+Shell and evaporation closures advance all three position and velocity
+components. Carrier formation, charge allocation and cell-drop association
+are prescribed. Gas flow is frozen, with an added suction approximation.
 """
 from __future__ import annotations
 

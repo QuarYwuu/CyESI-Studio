@@ -1,4 +1,4 @@
-"""Static, common-scale diameter comparisons backed by saved solver arrays."""
+"""Cell-diameter plots using common axes and saved solver arrays."""
 from pathlib import Path
 import numpy as np
 from .figures import serialized_plotting

@@ -1,9 +1,8 @@
-"""Editable 3-D capillary centreline, independent of the existing simulators.
+"""Capillary centrelines and local gravity frames.
 
-Distances are SI metres, station ``s`` is physical arclength from the sample
-entrance, and the terminal station is the inner-capillary lip. This describes
-geometry and the local gravity basis only. It does not add Dean flow, bend
-impacts, or resolve curved-pipe Navier--Stokes to the existing transport model.
+Coordinates and arclength s use SI metres, with s measured from the sample
+entrance to the inner-capillary lip. The path supplies geometry and gravity
+projection; curved-pipe secondary flow and bend impacts are excluded.
 """
 from __future__ import annotations
 
@@ -52,10 +51,8 @@ def _transport_frames(tangents):
 class TubePath:
     """Continuous centreline and orthonormal transverse frames.
 
-    Use ``default(config)`` for the requested upward--bend--horizontal route.
-    ``from_points`` accepts an editable list of [global x, global y, global z]
-    control points in metres. Passing length_m scales the entire shape about
-    the terminal point to that physical arclength; this is reported in metadata.
+    The default path rises, bends and becomes horizontal. from_points accepts
+    [x, y, z] control points in metres. length_m scales the path about its endpoint.
     """
     station_m: np.ndarray
     centers_m: np.ndarray

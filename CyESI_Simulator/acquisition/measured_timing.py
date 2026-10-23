@@ -1,8 +1,7 @@
-"""Use exported accumulation gates instead of assuming a periodic scan clock.
+"""Acquisition analysis using measured accumulation windows.
 
-CSV times MUST be accumulation starts, not Orbitrap readout timestamps. RAW
-scan retention times need conversion using the instrument acquisition semantics
-before import; this module deliberately does not guess that offset.
+CSV times are accumulation starts. Convert instrument retention or readout
+timestamps before import; the conversion depends on the acquisition method.
 """
 from pathlib import Path
 import csv
@@ -16,7 +15,7 @@ def load_gates(path):
     with Path(path).open(encoding='utf-8-sig',newline='') as stream:
         reader=csv.DictReader(stream)
         if not {'accumulation_start_s','actual_it_ms'} <= set(reader.fieldnames or []):
-            raise ValueError('CSV  Required:  accumulation_start_s, actual_it_ms;  Do not interpret  RAW  scan timestamps as injection start times .')
+            raise ValueError("CSV requires accumulation_start_s and actual_it_ms. Convert RAW readout timestamps to accumulation starts before import.")
         rows=[]
         for number,row in enumerate(reader,2):
             try:start=float(row['accumulation_start_s']);it=float(row['actual_it_ms'])
@@ -25,23 +24,23 @@ def load_gates(path):
                 raise ValueError(f'CSV  Index  {number}  Rows require a finite start time and positive measured  IT')
             rows.append({'accumulation_start_s':start,'actual_it_ms':it,
                          'resolution_at_mz200':row.get('resolution_at_mz200','')})
-    if not rows:raise ValueError('CSV  No acquisition gate data ')
+    if not rows:raise ValueError("CSV contains no acquisition windows.")
     starts=np.array([r['accumulation_start_s'] for r in rows]);ends=starts+np.array([r['actual_it_ms'] for r in rows])*.001
     if np.any(np.diff(starts)<=0) or np.any(ends[:-1]>starts[1:]+1e-12):
-        raise ValueError(' Acquisition gates must increase in time without overlap ;  This importer supports  Microscans=1  per-spectrum acquisition gates .')
+        raise ValueError("Acquisition windows must be chronological and non-overlapping, with one microscan per spectrum.")
     return rows
 
 
 def analyze_gates(gates, nozzle_rate_s, signal_width_ms=0., delivery_fraction=1.,
                   identification_efficiency=None, observation_duration_s=None, source=''):
     if not math.isfinite(nozzle_rate_s) or nozzle_rate_s<0 or not math.isfinite(signal_width_ms) or signal_width_ms<0 or not 0<=delivery_fraction<=1:
-        raise ValueError(' Input rate ,  Invalid signal width or delivery fraction ')
-    if identification_efficiency is not None and not 0<=identification_efficiency<=1:raise ValueError(' Identification efficiency must be unset or within  0–1  Inner ')
+        raise ValueError("Invalid cell input rate, signal width or delivery fraction.")
+    if identification_efficiency is not None and not 0<=identification_efficiency<=1:raise ValueError("Identification efficiency must be unset or between 0 and 1.")
     starts=np.array([r['accumulation_start_s'] for r in gates],float)
     it=np.array([r['actual_it_ms'] for r in gates],float)*.001
-    if not len(starts) or not np.isfinite(starts).all() or not np.isfinite(it).all() or np.any(it<=0) or np.any(np.diff(starts)<=0):raise ValueError(' Invalid acquisition gate times ')
+    if not len(starts) or not np.isfinite(starts).all() or not np.isfinite(it).all() or np.any(it<=0) or np.any(np.diff(starts)<=0):raise ValueError("Invalid acquisition-window times.")
     ends=starts+it
-    if np.any(ends[:-1]>starts[1:]+1e-12):raise ValueError(' Adjacent acquisition gates overlap, or  Microscans  Not expanded ')
+    if np.any(ends[:-1]>starts[1:]+1e-12):raise ValueError("Acquisition windows overlap. Expand multiple microscans into separate windows before import.")
     width=signal_width_ms*.001;left=starts-width;right=ends;support=right-left
     rate=nozzle_rate_s*delivery_fraction;mu=rate*support
     p0=np.exp(-mu);p1=mu*p0;nonempty=-np.expm1(-mu)
@@ -56,7 +55,7 @@ def analyze_gates(gates, nozzle_rate_s, signal_width_ms=0., delivery_fraction=1.
     # Exact span of provided gates; no assumed last transient or hidden overhead.
     span=float(ends[-1]-starts[0])
     duration=span if observation_duration_s is None else float(observation_duration_s)
-    if not math.isfinite(duration) or duration<=0 or duration<span-1e-12:raise ValueError(' The observation duration must cover all acquisition gates ')
+    if not math.isfinite(duration) or duration<=0 or duration<span-1e-12:raise ValueError("Observation duration must cover all acquisition windows.")
     per_scan=[dict(row,empty_probability=float(p0[i]),pure_probability=float(p1[i]),
                   mixed_probability=float(max(0.,nonempty[i]-p1[i]))) for i,row in enumerate(gates)]
     return {'source':str(source),'gate_count':len(gates),'nozzle_cells_s':nozzle_rate_s,

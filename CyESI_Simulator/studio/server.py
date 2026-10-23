@@ -1,4 +1,4 @@
-"""Independent, loopback-only server for the unified 2-D/3-D application."""
+"""Loopback HTTP server for the 2D and 3D workspace."""
 from __future__ import annotations
 
 from copy import deepcopy
@@ -88,7 +88,7 @@ class Handler(SceneHandler):
                 elif parsed.path.endswith('/frame'):value=ordering.frame(self.service,_number(one('t',0.),'study time',0.,3600.))
                 else:
                     study=ordering.current(self.service)
-                    if study is None:raise ValueError(' Run a population study ')
+                    if study is None:raise ValueError("Run a population study")
                     value=study.history(one('id'))
                 return self._send(200,_clean(value))
             if parsed.path=='/api/analysis':
@@ -154,7 +154,7 @@ class Handler(SceneHandler):
                 if not path.is_file():return self._send(404,{'error':'Unknown population file'})
                 return self._file(path)
             if parsed.path.startswith('/downloads/'):
-                # Only generated report files, never arbitrary workspace paths.
+                # Restrict downloads to generated report files.
                 components=unquote(parsed.path).split('/')
                 if len(components)!=4 or any(x in ('.','..') or '\\' in x for x in components[2:]):
                     return self._send(404,{'error':'Unknown report file'})
@@ -230,7 +230,7 @@ def launch(source=None,port=0,open_browser=True):
     server=create_server(source=source,port=port)
     url=f'http://127.0.0.1:{server.server_port}'
     print('CyESI Studio · unified 2-D / 3-D workspace: '+url,flush=True)
-    print('Existing applications and source records remain available. Close this terminal to stop.',flush=True)
+    print("Press Ctrl+C in this terminal to stop the server.",flush=True)
     if open_browser:webbrowser.open(url)
     try:server.serve_forever(poll_interval=.3)
     except KeyboardInterrupt:pass

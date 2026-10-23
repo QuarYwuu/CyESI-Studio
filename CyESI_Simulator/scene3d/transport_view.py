@@ -1,9 +1,8 @@
-"""Display adapters for deposited cells and common-clock local studies.
+"""Display adapters for wall deposition and local population studies.
 
-These adapters never reinterpret a finite-radius tip crossing or a censored
-trajectory as adhesion. Only an explicit capture/adhesion state may remain
-stationary on a wall. Baseline theoretical acquisition rates remain separate
-from the finite observation-window interaction study.
+Only recorded capture or adhesion states represent deposited cells.
+Finite-window interaction outcomes and full-duration acquisition rates
+are reported separately.
 """
 from __future__ import annotations
 
@@ -27,12 +26,7 @@ def _limit(cells, limit, selected_id):
 
 
 def add_bulk_deposits(scene, value, time_s, selected_id, max_cells):
-    """Keep explicit irreversible long-tube captures visible after capture.
-
-    The finite saved prehistory is the only counted deposition history. An
-    indefinitely operated irreversible adsorber has no finite steady deposit
-    population; deposits predating the saved source are not extrapolated.
-    """
+    """Display irreversible captures recorded in the saved source prehistory."""
     cfg = scene.data.config
     status = scene.data.fields.get('cell_bulk_status')
     if not cfg.supply.wall_capture_rate_s or status is None:

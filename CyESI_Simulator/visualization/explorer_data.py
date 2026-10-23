@@ -1,8 +1,7 @@
-"""Unit-aware access to live results or exported numeric arrays for the explorer.
+"""Read simulation arrays and provide unit conversions for display.
 
-Rendering has no authority to change physical results. Actual trajectories,
-solvent fields, electric fields, and detached components stay separate from
-the explicitly optional mechanism illustration.
+Field and trajectory views use solved data. Mechanism illustrations use
+separately specified display parameters.
 """
 from __future__ import annotations
 
@@ -30,7 +29,7 @@ class CellSnapshot:
 
 @dataclass
 class ExplanationSettings:
-    """User assumptions, never fitted or attached to the numerical result."""
+    """Parameters for the optional mechanism illustration."""
     jet_diameter_um: float = 8.0
     lysis_rate_s: float = 20.0
     extraction_rate_s: float = 50.0
@@ -199,7 +198,7 @@ class ExplorerData:
         if "response_residence_time_s" not in fields:
             path = Path(self.source)/"cells.csv"
             if not path.exists():
-                raise ValueError(" Complete transport responses missing  cells.csv,  Run a simulation before updating concentration ")
+                raise ValueError("Complete transport responses require cells.csv. Run a simulation before updating concentration.")
             with path.open(encoding="utf-8-sig", newline="") as stream:
                 rows = list(csv.DictReader(stream))
             fields = dict(fields, response_residence_time_s=np.array([float(x["residence_s"]) for x in rows]),

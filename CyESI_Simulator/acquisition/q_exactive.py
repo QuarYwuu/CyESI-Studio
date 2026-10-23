@@ -1,8 +1,8 @@
-"""Full-MS gating model for the original Q Exactive (not HF/HF-X).
+"""Full-MS timing for the original Q Exactive, excluding HF and HF-X models.
 
-Resolution/transient table: Thermo Q Exactive Getting Started / AGC FAQ;
-independently published in Michalski et al., MCP 2011, Table I.
-Actual IT, packet width and efficiencies are explicit scenario inputs.
+Resolution and transient durations follow Michalski et al., MCP 2011, Table I,
+and the Thermo Q Exactive documentation. Accumulation time, signal width and
+efficiencies are supplied by the acquisition scenario.
 """
 from dataclasses import asdict,dataclass,field
 from pathlib import Path
@@ -22,9 +22,9 @@ SOURCES=[
 class AcquisitionParameters:
     instrument: str='Q Exactive'
     mode: str='Full MS'
-    max_injection_time_ms: float=30.  # user-confirmed method
+    max_injection_time_ms: float=30.
     actual_injection_times_ms: list[float]=field(default_factory=lambda:[5.,10.,30.])
-    microscans: int=1  # user-confirmed method
+    microscans: int=1
     overhead_ms: float=20.  # assumed transfer/control overhead, not measured
     extra_record_delay_ms: float=0.  # optional measured gap between recorded spectra
     signal_width_ms: float=0.  # rectangular cell-origin ion packet, unknown; impulse limit
@@ -38,25 +38,25 @@ class AcquisitionParameters:
         for key,value in vars(self).items():
             values=value if isinstance(value,list) else [value]
             if any(isinstance(x,(int,float)) and not math.isfinite(x) for x in values):
-                raise ValueError(f' Acquisition parameters must be finite : {key}')
+                raise ValueError(f'Acquisition parameter must be finite: {key}')
         if self.instrument!='Q Exactive' or self.mode!='Full MS':
-            raise ValueError(' Acquisition model supports the original  Q Exactive  Of  Full MS  Continuous acquisition ')
+            raise ValueError("This acquisition model supports Full MS on the original Q Exactive.")
         if self.max_injection_time_ms<=0 or not self.actual_injection_times_ms:
-            raise ValueError('Maximum IT  And actual  IT  Setting must be positive ')
+            raise ValueError("Maximum and actual accumulation times must be positive.")
         if min(self.actual_injection_times_ms)<=0 or max(self.actual_injection_times_ms)>self.max_injection_time_ms:
-            raise ValueError(' Actual  IT  Setting must be  > 0  And at most  Maximum IT')
+            raise ValueError("Actual accumulation time must be positive and no greater than the maximum.")
         if not isinstance(self.microscans,int) or isinstance(self.microscans,bool) or not 1<=self.microscans<=10:
-            raise ValueError('Microscans  Must be  1–10  Integers ')
+            raise ValueError("Microscans must be an integer from 1 to 10.")
         if min(self.overhead_ms,self.extra_record_delay_ms,self.signal_width_ms)<0:
-            raise ValueError(' Overhead and signal width must be non-negative ')
+            raise ValueError("Overhead and signal width must be nonnegative.")
         if not 0<=self.signal_delivery_fraction<=1:
-            raise ValueError(' Delivery fraction must be in  0–1  Inner ')
+            raise ValueError("Delivery fraction must be between 0 and 1.")
         if self.single_event_identification_efficiency is not None and not 0<=self.single_event_identification_efficiency<=1:
-            raise ValueError(' Identification efficiency must be unspecified or in  0–1  Inner ')
+            raise ValueError("Identification efficiency must be unset or between 0 and 1.")
         if not self.observation_durations_s or min(self.observation_durations_s)<=0 or not 0<self.purity_target<1:
-            raise ValueError(' Observation duration must be positive ,  Purity target must be in  0–1  Inner ')
+            raise ValueError("Observation duration must be positive and purity target must be between 0 and 1.")
         if not isinstance(self.seed,int) or isinstance(self.seed,bool) or self.seed<0:
-            raise ValueError(' Random seed must be a non-negative integer ')
+            raise ValueError("Random seed must be a nonnegative integer.")
         return self
 
     def to_dict(self):return asdict(self)
@@ -127,7 +127,7 @@ def occupancy(rate,times,identification_efficiency=None):
 def analyze(nozzle_rate,parameters=None,source='',source_config=None,rate_inputs=None,transport_pending=False):
     p=(parameters or AcquisitionParameters()).validate()
     if nozzle_rate is None or not math.isfinite(nozzle_rate) or nozzle_rate<0:
-        raise ValueError(' Specify a finite non-negative steady outlet rate ')
+        raise ValueError("Specify a finite, nonnegative steady outlet rate.")
     packet_rate=nozzle_rate*p.signal_delivery_fraction
     # mu/(exp(mu)-1) decreases monotonically. Below this mu, the target is met.
     lo,hi=0.,50.
@@ -160,20 +160,20 @@ def analyze(nozzle_rate,parameters=None,source='',source_config=None,rate_inputs
             'pure_single_cell_spectra_s':'pure recorded spectra per second; one long cell signal can yield several',
             'conditional_detected_unique_cells_s':'unique pure opportunities multiplied by user-calibrated identification efficiency, if supplied'},
         'limitations':[
-            'User method: Full MS, Maximum IT 30 ms, Microscans 1 initially; all remain editable.',
-            'Actual IT can be shorter than Maximum IT under AGC. IT scenarios are assumptions, not AGC predictions.',
-            'Resolution denotes m/z 200. Transient times are sourced; the default 20 ms overhead is an unmeasured scenario.',
+            'Defaults: Full MS, maximum accumulation 30 ms, one microscan. All settings are editable.',
+            'Actual accumulation time is prescribed. Automatic gain control is not simulated.',
+            'Resolution is specified at m/z 200. Transient times follow the cited sources; overhead defaults to an assumed 20 ms.',
             'Cycle = microscans * (max(transient, actual IT) + overhead) + extra record delay; no dd-MS2 or polarity-switch simulation.',
-            'One cell produces one rectangular ion packet with common width; zero width is an impulse limit. Any gate overlap contributes.',
-            'Pulse width at the C-trap is not inlet flight time; extraction, inlet dispersion, adsorption and ion transport are uncalibrated.',
-            'Nozzle-to-ion-packet delivery defaults to an explicit 100% scenario; it is not inferred from geometric droplet entry.',
-            'Poisson arrivals, constant independent transmission, identical packets and stationary timing are assumed; correlated trains and AGC feedback require measured data.',
-            'Single origin does not guarantee adequate ions, S/N, identifiable metabolites or an intact living cell. Real MS detection remains uncalibrated.',
-            'Expected counts are ensemble means, not rounded Monte Carlo counts. Cells split across spectra are deduplicated analytically.']}
+            'Each cell supplies one rectangular signal of the specified width. Zero width is the impulse limit; any overlap with a window contributes.',
+            'Signal width at the C-trap includes release and transport broadening. Inlet flight time alone does not determine it.',
+            'Delivery fraction defaults to 1. Replace it with a measured value when available.',
+            'The model assumes Poisson arrivals, independent delivery, equal signal widths and stationary acquisition timing.',
+            'Metabolite identification requires sufficient ion signal and a separate sensitivity calibration.',
+            'Expected counts are ensemble means. A cell contributing to several spectra is counted once in cell recovery.']}
 
 
 def sample_timeline(row,p,rate,duration_s=1.):
-    """One seeded realization for viewing gate overlap; never a new rate fit."""
+    """Generate a seeded event realization for the timing display."""
     cycle=row['record_cycle_ms']*1e-3;micro=row['microscan_period_ms']*1e-3
     width=p.signal_width_ms*1e-3;fill=row['actual_injection_ms']*1e-3
     rng=np.random.default_rng(p.seed)

@@ -1,8 +1,7 @@
-"""Dependency-aware reuse of the existing solvers, without global patching.
+"""Solver execution and dependency-based caching.
 
-The pressure-controlled flow stored with a liquid solution is an output. Every
-consumer receives that solved flow, never the stale input guess. Caches belong
-to this workbench instance; legacy modules and files are not modified.
+Pressure-controlled calculations pass the solved sample flow to downstream
+modules. Each workbench instance owns its caches.
 """
 from collections import OrderedDict,Counter
 from copy import deepcopy
@@ -32,11 +31,10 @@ def physical_key(config):return digest(physical_inputs(config))
 
 
 def reusable_record(data):
-    """Whether an archived particle response satisfies the current contract.
+    """Check whether a saved particle response matches the current transport model.
 
-    Historical records stay inspectable, and their carrier fields can still be
-    restored. The former legacy long-pipe path used a different finite-size
-    wall/time boundary; silently reusing that response would hide its repair.
+    Records with older wall or timeout definitions can supply carrier fields,
+    but their particle responses require recomputation.
     """
     config=data.config;particles=data.summary.get('particles',{})
     if config.supply.orientation=='legacy' and config.geometry.bulk_length>0:
@@ -105,12 +103,10 @@ class WorkbenchSolver:
         self.cache=StageCache(capacity);self.lock=threading.RLock()
 
     def seed_saved(self,data):
-        """Restore saved carrier samplers for particle-only changes.
+        """Restore carrier-field samplers for particle-only changes.
 
-        No face flux or FEM coefficients are invented. These restored objects
-        are used by the existing particle/spray samplers only. Any changed
-        carrier condition requires a new liquid solve under a different key.
-        Resistive results require the actual exported ionic archive.
+        Changed flow conditions require a new liquid solve. Resistive calculations
+        require the saved ionic fields.
         """
         from pathlib import Path
         from types import SimpleNamespace
@@ -266,8 +262,7 @@ def save_numeric(result,directory):
     p=result.particles
     write_csv(path/'cells.csv',({'cell_id':i,'status':int(p.status[i]),'residence_s':p.residence_time[i],
         'outlet_r_um':p.outlet_radius[i]*1e6,'outlet_methanol_fraction':p.outlet_methanol[i]} for i in range(result.config.cell.count)))
-    # Legacy result discovery uses fields.npz as its index. Commit it last so
-    # those readers also see all companions, even without understanding record.json.
+    # Write fields.npz last so result discovery skips incomplete records.
     archive('fields',**data.fields)
     data.summary=deepcopy(summary);data._transport_summary=deepcopy(summary)
     document('record',dict(format_version=1,status='complete',files=[p.name for p in path.iterdir() if p.name!='record.json']))

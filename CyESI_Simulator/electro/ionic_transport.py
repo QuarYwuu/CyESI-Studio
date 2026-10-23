@@ -34,8 +34,7 @@ class IonicResult:
     def __post_init__(self):
         r,z,*_=metric(self.radial_edges,self.axial_edges)
         self.r,self.z=r,z;self._cache={}
-        # Differentiate on the LIQUID grid. An external gas field must never
-        # leak across quartz into the bulk DEP force through interpolation.
+        # Take derivatives of the ionic potential on the liquid grid.
         e2=filled(self.field_r**2+self.field_z**2,self.active)
         self.grad_e2_r,self.grad_e2_z=np.gradient(e2,r,z,edge_order=2)
 

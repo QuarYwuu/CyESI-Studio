@@ -1,4 +1,4 @@
-"""Inspectable scenario output; unresolved endpoints remain blank, never zero."""
+"""Export cell-state results, leaving unresolved endpoints blank."""
 from pathlib import Path
 from collections import Counter
 import html

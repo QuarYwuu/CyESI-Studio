@@ -1,4 +1,4 @@
-"""Diameter-comparison figures and reproducible recalculation workspace."""
+"""Cell-diameter comparison workspace."""
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path

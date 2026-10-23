@@ -1,8 +1,7 @@
-"""Flat, cell-faithful cuts through the independently solved Cartesian fields.
+"""Cell-constant cuts through Cartesian finite-volume fields.
 
-The displayed plane uses the containing finite-volume slab.  Values are never
-interpolated across quartz or between gas and liquid.  Native coordinates are
-retained, so a flat cut does not inherit the three-dimensional display lens.
+Each cut uses its containing slab and material mask. Coordinates remain
+physical, without the axial display compression.
 """
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Inspectable figures and movie from the same tagged continuous stream."""
+"""Figures and animation from a shared continuous event stream."""
 from pathlib import Path
 import html
 import json

@@ -1,7 +1,7 @@
-"""Pressure units, segmented tube orientation and hydraulic network closure.
+"""Pressure conversion, tube orientation and hydraulic network closure.
 
-Gauge pressure is relative to atmosphere at the spray. Hydrostatic pressure is
-included once, over the actual tube path, not in the axisymmetric tip solver.
+Gauge pressure is relative to atmosphere at the spray. Hydrostatic head is
+computed along the tube path, outside the resolved tip calculation.
 """
 from __future__ import annotations
 import math
@@ -26,7 +26,7 @@ def segments(config):
     """Return path segments with local gravity (x,y,z) and end arclength."""
     s = config.supply
     if s.orientation == "legacy":
-        # Preserves explicitly supplied historical axial gravity, no transverse gravity.
+        # Use the supplied axial gravity with zero transverse component.
         raw = [(1., config.cell.gravity_z, 0., 0.)]
     else:
         rows = s.segments if s.orientation == "custom" else [
@@ -91,7 +91,7 @@ def pressure_solution(config, solve_fixed_flow, progress):
     s = config.supply
     driving = s.sample_pressure_mbar*100+hydrostatic_assist_pa(config)-s.outlet_pressure_pa
     if driving <= 0:
-        raise ValueError(" Sample pressure is below the hydrostatic head / Outlet back pressure ,  Stagnant or reversed flow ;  Transport model requires forward flow .")
+        raise ValueError("Sample pressure is below the hydrostatic head and outlet backpressure. This transport model requires forward flow.")
     bulk_r = resistance(config, config.geometry.bulk_length)
     full_r = resistance(config)
     q = max(driving/full_r*60e9, 1e-6)
@@ -121,7 +121,7 @@ def pressure_solution(config, solve_fixed_flow, progress):
         previous = (q, residual)
         if next_q <= 0:
             if q < 1e-5:
-                raise ValueError(" Sheath back pressure exceeds sample supply pressure ,  No forward sample-flow solution .")
+                raise ValueError("Sheath backpressure exceeds sample supply pressure; no forward-flow solution exists.")
             next_q = q*.05
         q = next_q
     raise RuntimeError(f"Pressure / flow closure did not converge; last residual {residual:.4g} Pa")

@@ -1,10 +1,8 @@
-"""Independent Cartesian finite-volume tip fields, never a rotated 2-D solution.
+"""Cartesian finite-volume flow, chemistry and electrical fields at the tip.
 
-The fixed liquid outlet and fixed quartz surfaces are explicit approximations.
-This module does not claim a solved moving Taylor cone or charge-conserving
-drop breakup. Long upstream tubing is handled separately by a developed-flow
-extension. The conservative face flux, rather than interpolated cell velocity,
-is the authority for continuity and scalar transport.
+Liquid outlets and quartz surfaces have fixed geometry. Developed-flow
+transport supplies the upstream tube extension. Conservative face fluxes
+are used for continuity and scalar transport.
 """
 from __future__ import annotations
 
@@ -462,11 +460,9 @@ def _electrical(grid, material, config, methanol, salt, liquid, current, setting
 
 
 def solve_volume(config, settings=None, progress=lambda value: None):
-    """Solve independent, coupled 3-D tip gas/liquid/chemistry/electric fields.
+    """Solve Cartesian gas, liquid, species and electrical fields on fixed geometry.
 
-    Fluid interfaces are fixed geometry. Gas pressure has a genuine x-dependent
-    perturbation when requested, providing a non-axisymmetric 3-D validation
-    case. No existing result/configuration files are modified or overwritten.
+    An optional x-dependent gas-pressure perturbation provides an asymmetric case.
     """
     started = time.perf_counter(); config = deepcopy(config).validate()
     settings = deepcopy(settings or VolumeSettings()).validate()

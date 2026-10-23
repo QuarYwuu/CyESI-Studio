@@ -1,4 +1,4 @@
-"""Create a fresh, editable 2-D preview when no numerical record exists."""
+"""Initialize a 2D preview when no local solution exists."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -12,7 +12,7 @@ from ..workbench.compute import save_numeric
 
 
 def studio_output_root(output_root=None):
-    """Keep generated files in a writable workspace, outside the package."""
+    """Resolve a writable directory for generated files."""
     if output_root is not None:
         return Path(output_root).expanduser().resolve()
     base = Path(os.environ.get('CYESI_OUTPUT_DIR', str(Path.cwd()/'outputs')))
@@ -38,7 +38,7 @@ def _latest_axisymmetric(root):
 
 
 def initial_source(source, scene, output_root, solver):
-    """Retain explicit inputs, reuse local work, or solve a new startup preview."""
+    """Use the supplied source, reuse local results or compute a startup preview."""
     if source is not None or scene is not None:
         return source
     existing = _latest_axisymmetric(output_root) or find_results()

@@ -150,7 +150,6 @@ class ExplorerWindow:
         if self.page=="device":self.mode_box.pack_forget()
         elif not self.mode_box.winfo_manager():self.mode_box.pack(side="left")
         if self.page=="nozzle" and self.explanation:
-            # Keep the assumptions next to the controls, above playback.
             if not self.assumptions.winfo_manager():self.assumptions.pack(fill="x",padx=20,pady=2,before=self.play_button.master)
         else:self.assumptions.pack_forget()
 
@@ -325,7 +324,7 @@ class ExplorerWindow:
             "膜完整性假设: dI/dt = -k Lysis  C² I.胞内残留假设: dM/dt = -k Extraction  C(1-I)M."
             "I 和 M 是归一化变量; 释放量 = 1-M.实际出管前的暴露历史来自轨迹, 出管后的继续暴露时长和速率均为用户假设."
             "这些值未经生物实验校准, 不能解释为实测裂解率, 提取率或检测效率.\n\n"
-            f"当前数据: {self.data.source}\n\n更多说明见 README.md 与 docs/VISUAL_EXPLORER.md.")
+            f"Current source: {self.data.source}\n\nSee README.md for installation and usage.")
         text.configure(state="disabled")
 
     def _cleanup(self):

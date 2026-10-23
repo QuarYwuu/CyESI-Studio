@@ -1,4 +1,4 @@
-"""CPU budgets and spawn-safe process jobs. No Tk objects enter a worker."""
+"""CPU budgets and spawn-safe background jobs."""
 from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED
 import ctypes
 import multiprocessing as mp

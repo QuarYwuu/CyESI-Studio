@@ -1,1 +1,1 @@
-"""Independent three-dimensional views; existing solver and GUI stay isolated."""
+"""Three-dimensional fields, transport and visualization."""

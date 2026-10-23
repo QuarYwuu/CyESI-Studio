@@ -17,10 +17,8 @@ function toast(message){$('toast').textContent=message;$('toast').hidden=false;c
 async function api(path,body){const response=await fetch(path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-CyESI-Session':state.token},body:JSON.stringify(body)});const value=await response.json();if(!response.ok)throw new Error(value.error||response.statusText);return value;}
 function safeRun(fn){return (...args)=>Promise.resolve().then(()=>fn(...args)).catch(e=>toast(e.message));}
 
-// A single continuous display lens. Physical data stay in SI. The centreline
-// is compressed along arclength, while local cross-sections retain one scale.
-// Nearest-segment mapping is cached for static vertices; this is visualization,
-// never a substitute for field or particle integration.
+// Compress axial arclength for display while retaining the cross-section scale.
+// Cache nearest-segment mappings for static geometry.
 function makeMapper(path,lens){
  if(!lens)return p=>[p[2]*4000,p[1]*4000,-p[0]*4000];
  if(!path)return null;

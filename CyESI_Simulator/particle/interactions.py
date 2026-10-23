@@ -1,20 +1,14 @@
-"""Shared continuous finite-sphere physics over solved local tip fields.
+"""Continuous finite-sphere interactions in prescribed tip fields.
 
-Cartesian and axisymmetric field adapters use the same interaction, contact
-and bond laws. An axisymmetric field never makes each cell a particle ring.
-
-This optional study admits the existing Poisson event IDs at their actual tip
-arrival times. It never treats independently timed response templates as one
-simultaneous suspension. Background fields remain one-way coupled. Pair flow
-uses a cutoff RPY external-force mobility plus the leading rigid-sphere strain
-stresslet; this is a dilute, unbounded-fluid approximation with self wall
-mobility, not a confined many-body Stokes solver. Finite exclusion/contact is
-separate from unmeasured, explicitly conditional adhesion kinetics.
+Cartesian and axisymmetric adapters share contact and bond laws. Events enter
+at their recorded tip-arrival times and then advance on a common clock.
+Background fields are one-way coupled. Pair flow uses a cutoff RPY mobility
+and a leading rigid-sphere strain stresslet in a dilute, unbounded fluid,
+with single-particle wall corrections. Adhesion rates are scenario inputs.
 
 References: Wajnryb et al., JFM 731 (2013), R3,
-https://arxiv.org/abs/1307.7312 ; Bell, Science 200 (1978), 618,
-https://doi.org/10.1126/science.347575 . Bell-type force acceleration below is
-a phenomenological aggregate bond, not a measured quartz/lymphocyte constant.
+https://arxiv.org/abs/1307.7312; Bell, Science 200 (1978), 618,
+https://doi.org/10.1126/science.347575. The Bell law describes an effective bond.
 """
 from __future__ import annotations
 
@@ -337,9 +331,7 @@ def simulate_interactions(scene,parameters=None,progress=lambda value:None,field
         new=np.flatnonzero((state==0)&(entry<=t+1e-12))
         if len(new):
             xyz[new]=initial[new];state[new]=1
-            # Response templates are independent, so their superposition can
-            # begin in overlap. Admit with explicit excluded-volume adjustment;
-            # this is recorded rather than mistaken for predicted aggregation.
+            # Record excluded-volume corrections at admission separately from aggregation.
             live=np.flatnonzero(np.isin(state,LIVE_STATES))
             for _ in range(8):
                 pairs=cKDTree(xyz[live]).query_pairs(2*R,output_type='ndarray')
@@ -482,9 +474,7 @@ def simulate_interactions(scene,parameters=None,progress=lambda value:None,field
             penetrated=(dist<R)&(wall_kind[live]==0)
             if penetrated.any():xyz[live[penetrated]]+=(R-dist[penetrated])[:,None]*norm[penetrated]
             xyz[live[wall_kind[live]>0]]=anchor[live[wall_kind[live]>0]]
-        # Alternating projections can leave an infeasible tightly packed
-        # configuration. Report the actual residual rather than claiming exact
-        # hard-sphere/contact resolution from a fixed iteration count.
+        # Report residual overlap after the contact-projection iterations.
         check_pairs=cKDTree(xyz[live]).query_pairs(2*R,output_type='ndarray')
         if len(check_pairs):
             distances=np.linalg.norm(xyz[live[check_pairs[:,0]]]-xyz[live[check_pairs[:,1]]],axis=1)
@@ -516,7 +506,7 @@ def simulate_interactions(scene,parameters=None,progress=lambda value:None,field
         if steps%1000==0:progress(f'Continuous tip interactions: {t-p.start_s:.3f}/{p.duration_s:.3f} s, active {len(remaining)}, bonds {len(bonds)}')
     budget=steps>=p.max_steps and t<end-1e-12
     if budget:
-        # These are unfinished numerical observations, never adhesive loss.
+        # Record unfinished trajectories as censored.
         state[np.isin(state,LIVE_STATES)]=6;save()
     else:admit();save()
     counts={label:int(np.sum(state==code)) for code,label in STATE_LABELS.items()}

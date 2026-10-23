@@ -1,8 +1,7 @@
-"""Mixed P2/P1 axisymmetric FEM, including hoop strain and r-weighted measure.
+"""P2/P1 axisymmetric FEM with hoop strain and radial integration weights.
 
-Pressure is fixed by natural zero traction at the liquid outlet, not by a
-fabricated pressure gradient. Inputs are scaled to avoid SI saddle-point
-conditioning problems. The optional Picard term solves steady laminar NS.
+The outlet has zero traction. Scaled variables improve matrix conditioning;
+the optional Picard iteration includes steady inertial convection.
 """
 from dataclasses import dataclass
 import numpy as np

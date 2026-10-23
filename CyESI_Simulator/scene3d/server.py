@@ -1,7 +1,6 @@
-"""Local-only, independent 3-D application. Existing result files are read-only.
+"""Loopback HTTP server for the 3D workspace.
 
-The small HTTP interface has no CDN, database, browser automation or new Python
-dependency. A single background numerical job keeps the scene responsive.
+A background worker runs numerical jobs. Browser assets are served locally.
 """
 from __future__ import annotations
 
@@ -390,11 +389,9 @@ class SceneService:
         return self.start('native3d', work)
 
     def interactions(self, body):
-        """A common-clock local population study, reusing the resolved fields.
+        """Run a local population study with common-clock events and fixed fields.
 
-        Never collide the independently timed transport response templates.
-        This finite observation window has its own outcomes; it does not
-        replace the baseline full-duration theoretical MS rates.
+        Finite-window outcomes are separate from full-duration acquisition rates.
         """
         scene, _ = self.snapshot()
         if not hasattr(scene, 'volume'):
@@ -512,8 +509,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, scene.event(event_id))
             if url.path == '/api/flight':
                 event_id = scene._validate_event(one('id'))
-                # A read endpoint must never start the potentially expensive
-                # carrier solver. POST explicitly computes the selected case.
+                # Return the stored solution; numerical jobs run through the job endpoints.
                 value = scene._flights.get(event_id)
                 if value is None:
                     return self._send(404, {'error': 'Selected conditional flight has not been computed'})

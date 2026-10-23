@@ -600,8 +600,7 @@ class Application:
         except queue.Empty: pass
         finally:
             if not self.closed:
-                # Even if a preview or completion callback failed, keep polling.
-                # A finished worker must not leave the controls disabled.
+                # Continue polling after view errors so worker completion restores the controls.
                 if self.busy and self.worker_thread is not None and not self.worker_thread.is_alive() and self.messages.empty():
                     self.set_busy(False)
                 self.update_busy_caption()

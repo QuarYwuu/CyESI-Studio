@@ -1,9 +1,7 @@
-"""Shared experiment and cached dimension switching for the unified workbench.
+"""Experiment state, background jobs and dimension-specific caches.
 
-An axisymmetric solution and a Cartesian solution remain different numerical
-records.  Both expose the same identity-preserving continuous event stream and
-use the existing physics engines; this module does not invent intermediate
-fields when switching the view.
+Axisymmetric and Cartesian solutions are stored separately and share the
+continuous-event interface. Switching views selects the corresponding record.
 """
 from __future__ import annotations
 
@@ -29,10 +27,9 @@ def dimension(scene):
 
 
 def portable_source(value):
-    """Resolve archived outputs after moving/unzipping the project folder.
+    """Relocate source paths beneath the current outputs directory.
 
-    The original absolute path remains provenance. Only a suffix beneath the
-    current project's outputs is considered as a relocation candidate.
+    The recorded absolute path remains in the source metadata.
     """
     original=Path(str(value))
     if (original/'config.json').is_file():return original
@@ -197,7 +194,7 @@ class StudioService(SceneService):
 
     def start(self, kind, work):
         # Publish the scene and its dimension cache in one critical section.
-        # A cancelled candidate must never become a selectable cached result.
+        # Exclude cancelled jobs from the result cache.
         with self.lock:
             if self.job['state'] == 'running':
                 raise RuntimeError('A numerical job is already running; the current scene remains available.')

@@ -1,10 +1,8 @@
-"""Restore the original two-dimensional figure gallery without solving CFD.
+"""Render the 2D figure gallery from saved numerical arrays.
 
-Exact archived PNG/SVG/GIF files are copied when their configuration matches.
-Missing plots reuse the original plotting functions with saved numerical
-arrays. Unarchived conservative fluxes, full-population inlet radii and 0-kV
-comparisons remain explicitly unavailable rather than being reconstructed as
-new physical results.
+Matching image exports are reused. Other plots use the stored fields and paths.
+Plots requiring unavailable face fluxes, inlet radii or voltage comparisons
+remain unavailable.
 """
 from __future__ import annotations
 
@@ -114,8 +112,7 @@ def saved_result(data):
 
 
 def _focusing(result):
-    # Face fluxes were not exported by historical numerical archives. The
-    # original conserved-streamfunction contours cannot be recovered exactly.
+    # Streamfunction contours require saved conservative face fluxes.
     s=result.solvent; f=result.fields
     fig,axes=original._new('Figure 3 | Hydrodynamic focusing and shear',cols=2,size=(12,4.7))
     original._map(axes[0],s.radial_edges,s.axial_edges,s.concentration,'Methanol fraction','YlGnBu',s.active,(-1.3,0))

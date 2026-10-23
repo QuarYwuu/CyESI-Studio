@@ -1,4 +1,4 @@
-"""Explicit, cached research jobs; the active 2-D/3-D scene stays untouched."""
+"""Cached parameter studies using background jobs."""
 from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime
@@ -47,11 +47,11 @@ def _scan_figures(rows,root,parameter=None):
 
 def run_study(service,body):
     kind=body.get('kind','size')
-    if kind not in ('size','length','scan'):raise ValueError(' Unknown parameter study ')
+    if kind not in ('size','length','scan'):raise ValueError("Unknown parameter study")
     scene,_=service.snapshot();config=deepcopy(scene.data.config)
     cells=body.get('cells',64)
     if isinstance(cells,bool) or not isinstance(cells,int) or not 16<=cells<=10000:
-        raise ValueError(' Response sample count must be  16–10000  Integers ')
+        raise ValueError("Response sample count must be an integer from 16 to 10000.")
     config.numerics.workers=body.get('workers',1)
     if kind=='size':
         from ..optimization.size_study import SizeParameters
@@ -66,16 +66,16 @@ def run_study(service,body):
         p.validate()
     else:
         p=None
-        if not isinstance(body.get('full',False),bool):raise ValueError('full  Must be a Boolean ')
+        if not isinstance(body.get('full',False),bool):raise ValueError("full must be a boolean.")
         parameter=body.get('parameter')
         from ..optimization.parameter_scan import SWEEPS
         if parameter is not None:
-            if parameter not in SWEEPS:raise ValueError(' Unknown sweep parameter ')
+            if parameter not in SWEEPS:raise ValueError("Unknown sweep parameter")
             values=body.get('values',SWEEPS[parameter])
-            if not isinstance(values,list) or not 1<=len(values)<=100:raise ValueError(' Sweep must contain  1–100  Numeric values ')
+            if not isinstance(values,list) or not 1<=len(values)<=100:raise ValueError("A sweep must contain 1 to 100 numeric values.")
             import math
             if any(isinstance(v,bool) or not isinstance(v,(int,float)) or not math.isfinite(v) for v in values):
-                raise ValueError(' Sweep values must be finite numbers ')
+                raise ValueError("Sweep values must be finite numbers")
             for value in values:
                 trial=deepcopy(config)
                 setattr(trial.electrical if parameter=='voltage_kv' else trial.fluid,parameter,value)

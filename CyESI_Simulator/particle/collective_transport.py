@@ -1,10 +1,8 @@
-"""Common-clock, continuously fed long-capillary population study.
+"""Continuous long-capillary populations on a shared physical clock.
 
-Every source event is advanced from its actual inlet time, including saved
-prehistory. There is no imposed train, minimum temporal spacing or gap spring.
-The computed domain ends at the resolved-tip entrance. Downstream ion packets
-are not shifted by an assumed independent tip delay: their continuation must
-be recomputed from the new entrance positions before claiming an MS benefit.
+Events enter at their recorded source times, including prehistory. The domain
+ends at the resolved-tip entrance. Changes to downstream signal timing require
+new tip transport from the resulting entrance positions.
 """
 from __future__ import annotations
 from dataclasses import asdict,dataclass
@@ -48,18 +46,18 @@ class CollectiveParameters:
     def validate(self):
         numbers=['start_s','duration_s','dt_s','sample_interval_s','prehistory_interval_s',
             'membrane_shear_modulus_n_m','max_shape_strain','roughness_um','neighbor_diameters','wall_half_length_radii']
-        if any(isinstance(getattr(self,k),(bool,str)) for k in numbers) or not np.isfinite([getattr(self,k) for k in numbers]).all():raise ValueError(' Population parameters must be finite numbers ')
-        if self.start_s<0 or not 0<self.duration_s<=60:raise ValueError(' Observation start must be non-negative ,  Duration range  0–60 s')
-        if not 1e-5<=self.dt_s<=.1 or not 1e-4<=self.sample_interval_s<=2 or not .1<=self.prehistory_interval_s<=30:raise ValueError(' Invalid integration or output interval ')
-        if not .001<=self.roughness_um<=2 or not 1<=self.neighbor_diameters<=10:raise ValueError(' Invalid contact gap or neighbour cutoff ')
-        if self.membrane_shear_modulus_n_m<=0 or not .01<=self.max_shape_strain<=.3:raise ValueError(' Membrane shear modulus must be positive ,  Small-strain limit range  .01–.3')
+        if any(isinstance(getattr(self,k),(bool,str)) for k in numbers) or not np.isfinite([getattr(self,k) for k in numbers]).all():raise ValueError("Population parameters must be finite numbers.")
+        if self.start_s<0 or not 0<self.duration_s<=60:raise ValueError("Observation start must be nonnegative and duration must be between 0 and 60 s.")
+        if not 1e-5<=self.dt_s<=.1 or not 1e-4<=self.sample_interval_s<=2 or not .1<=self.prehistory_interval_s<=30:raise ValueError("Invalid integration step or output interval.")
+        if not .001<=self.roughness_um<=2 or not 1<=self.neighbor_diameters<=10:raise ValueError("Invalid contact gap or neighbour cutoff.")
+        if self.membrane_shear_modulus_n_m<=0 or not .01<=self.max_shape_strain<=.3:raise ValueError("Membrane shear modulus must be positive and the small-strain limit must be between 0.01 and 0.3.")
         for key in ('hydrodynamics','wall_reflections','pair_lubrication','exclusion','inlet_queue','faxen','membrane','inertia','compare_independent'):
             if not isinstance(getattr(self,key),bool):raise ValueError(key+'  Must be a Boolean ')
         for key,low,high in [('wall_theta',8,32),('wall_rings',5,21),('max_events',1,30000),('max_steps',1,2000000)]:
             v=getattr(self,key)
             if isinstance(v,bool) or not isinstance(v,int) or not low<=v<=high:raise ValueError(key+'  Outside the allowed integer range ')
-        if not 4<=self.wall_half_length_radii<=30:raise ValueError(' Wall-patch half-length range  4–30  Capillary radii ')
-        if self.seed is not None and (isinstance(self.seed,bool) or not isinstance(self.seed,int) or self.seed<0):raise ValueError('seed  Must be a non-negative integer ')
+        if not 4<=self.wall_half_length_radii<=30:raise ValueError("Wall-patch half-length must be between 4 and 30 capillary radii.")
+        if self.seed is not None and (isinstance(self.seed,bool) or not isinstance(self.seed,int) or self.seed<0):raise ValueError("Random seed must be a nonnegative integer.")
         return self
 
     def to_dict(self):return asdict(self)
@@ -123,7 +121,7 @@ def initial_positions(config,ids,seed):
     # the same inlet points, independent of dt, neighbour discovery and noise.
     a=config.geometry.a;R=config.cell.diameter_um*.5e-6
     limit=a-R-max(config.supply.wall_capture_gap_um, .001)*1e-6
-    if limit<=0:raise ValueError(' Cell and gap exceed the available capillary radius ')
+    if limit<=0:raise ValueError("The cell radius and gap exceed the capillary radius.")
     smax=(limit/a)**2;points=[]
     for i in ids:
         rng=np.random.default_rng(np.random.SeedSequence([seed,int(i),1701]))
@@ -168,7 +166,7 @@ class CollectiveResult:
 
     def history(self,event_id):
         found=np.flatnonzero(self.event_ids==int(event_id))
-        if not len(found):raise ValueError(' Event ID absent from this population study ')
+        if not len(found):raise ValueError("This event ID is absent from the population study.")
         j=int(found[0]);valid=np.isfinite(self.positions_m[:,j]).all(axis=1)
         return dict(event_id=int(event_id),injection_s=float(self.injection_s[j]),time_s=self.time_s[valid].tolist(),
             positions_m=self.positions_m[valid,j].tolist(),states=self.states[valid,j].tolist(),
@@ -190,14 +188,14 @@ class CollectiveResult:
         """Read arrays without pickle; the caller verifies record provenance."""
         root=Path(directory)
         metadata=json.loads((root/'collective.json').read_text(encoding='utf-8'))
-        if metadata.get('schema_version')!=1:raise ValueError(' Unsupported population record format ')
+        if metadata.get('schema_version')!=1:raise ValueError("Unsupported population-record format.")
         p=CollectiveParameters(**metadata['parameters']).validate()
         names=('event_ids','injection_s','time_s','positions_m','states','shape_strain','crossings_s',
                'baseline_positions_m','baseline_states','baseline_crossings_s')
         with np.load(root/'collective.npz',allow_pickle=False) as data:
             arrays={name:data[name] if name in data else None for name in names}
         n=len(arrays['event_ids']);nt=len(arrays['time_s'])
-        if n>p.max_events or nt*max(n,1)>6000000:raise ValueError(' Record exceeds the history budget ')
+        if n>p.max_events or nt*max(n,1)>6000000:raise ValueError("This record exceeds the history-storage limit.")
         shapes={'event_ids':(n,),'injection_s':(n,),'time_s':(nt,),
                 'positions_m':(nt,n,3),'states':(nt,n),'shape_strain':(nt,n),'crossings_s':(n,5),
                 'baseline_positions_m':(nt,n,3),'baseline_states':(nt,n),'baseline_crossings_s':(n,5)}
@@ -206,17 +204,17 @@ class CollectiveResult:
                 if not name.startswith('baseline_'):raise ValueError(' Population record missing  '+name)
             elif arrays[name].shape!=shape:raise ValueError(' Inconsistent population array shape : '+name)
         t=arrays['time_s']
-        if nt<1 or not np.isfinite(t).all() or np.any(np.diff(t)<=0):raise ValueError(' Invalid population clock ')
+        if nt<1 or not np.isfinite(t).all() or np.any(np.diff(t)<=0):raise ValueError("Invalid population clock.")
         return cls(p,metadata['source_id'],**arrays,diagnostics=metadata['diagnostics'],analysis=metadata['analysis'])
 
 
 def _advance(config,ids,birth,initial,p,progress,coupling):
     g=config.geometry;f=config.fluid;R=config.cell.diameter_um*.5e-6;a=g.a;mu=f.sample_viscosity
     length=g.bulk_length;start_z=g.inner_tip-g.sample_length_mm*.001;rough=p.roughness_um*1e-6
-    if length<=0:raise ValueError(' Resolved tip occupies the entire sample capillary ,  No separate long-capillary domain ')
-    if a-R-rough<=0:raise ValueError(' Sphere and roughness gap do not fit the capillary ')
+    if length<=0:raise ValueError("The resolved tip occupies the full sample capillary, leaving no upstream tube domain.")
+    if a-R-rough<=0:raise ValueError("The cell and roughness gap do not fit inside the capillary.")
     mean=f.qs/(np.pi*a*a);re=f.sample_density*mean*2*a/mu
-    if p.inertia and re>.5:raise ValueError(' First-order inertia restricted to  Re≤0.5;  Use a validated finite Re Solver ')
+    if p.inertia and re>.5:raise ValueError("First-order inertia requires Re <= 0.5. Use a finite-Re solver above this range.")
     seed=config.numerics.seed+1703 if p.seed is None else p.seed
     N=len(ids);xyz=np.full((N,3),np.nan);state=np.zeros(N,np.uint8);Q=np.zeros((N,3,3))
     planes=np.linspace(0,length,5);cross=np.full((N,5),np.nan)
@@ -234,12 +232,12 @@ def _advance(config,ids,birth,initial,p,progress,coupling):
         max_lubrication_dissipation_w=0.,min_step_s=p.dt_s,max_cluster_cells=1)
     contact_pairs=set();rng=np.random.default_rng(seed)
     def save():
-        if (len(history_t)+1)*max(N,1)>6000000:raise ValueError(' Population history budget exceeded ;  Increase output interval or shorten the observation window ,  All source events retained ')
+        if (len(history_t)+1)*max(N,1)>6000000:raise ValueError("History-storage limit exceeded. Increase the output interval or shorten the observation window.")
         if history_t and abs(history_t[-1]-t)<1e-12:
             history_x[-1]=xyz.copy();history_state[-1]=state.copy();history_shape[-1]=np.linalg.norm(Q,axis=(1,2));return
         history_t.append(t);history_x.append(xyz.copy());history_state.append(state.copy());history_shape.append(np.linalg.norm(Q,axis=(1,2)))
     while t<end-1e-10:
-        if steps>=p.max_steps:raise ValueError(' Population step limit reached ,  Adjust time step or duration ;  Incomplete study retained as a failed job ')
+        if steps>=p.max_steps:raise ValueError("Population step limit reached. Adjust the time step or observation duration.")
         while next_in<N and birth[next_in]<=t+1e-10:
             state[next_in]=5;next_in+=1
         # Prescribed Poisson times are source attempts. If a finite sphere's
@@ -274,7 +272,7 @@ def _advance(config,ids,birth,initial,p,progress,coupling):
                 groups=_components(x,p.neighbor_diameters*2*R) if coupling else [np.array([i]) for i in range(len(x))]
                 for group in groups:
                     if len(group)==1 and not p.membrane and not p.inertia:continue
-                    if len(group)>40:raise ValueError(' Neighbour cluster exceeds 40 Cells ,  Dilute confined approximation exceeded ;  Cluster requires a different model ')
+                    if len(group)>40:raise ValueError("Neighbour cluster exceeds 40 cells, outside the dilute confined approximation.")
                     velocity[group],detail=solve_group(x[group],ambient[group],E[group],force[group],kernel,rough,
                         coupling=coupling and p.hydrodynamics,wall=p.wall_reflections,
                         lubrication=coupling and p.pair_lubrication,
@@ -300,7 +298,7 @@ def _advance(config,ids,birth,initial,p,progress,coupling):
             if radial_speed.max()>0:dt=min(dt,.2*R/radial_speed.max())
             if config.cell.use_brownian:
                 D=float(brownian_diffusivity(f.temperature_k,mu,R));dt=min(dt,R*R/(40*D))
-            if dt<1e-9:raise ValueError(' Population time step too small ;  Near-field closure / Check parameters ')
+            if dt<1e-9:raise ValueError("Population time step is too small. Check the near-field parameters.")
             old=x.copy();new=x+velocity*dt
             new[fixed]=old[fixed]
             if config.cell.use_brownian:
@@ -310,7 +308,7 @@ def _advance(config,ids,birth,initial,p,progress,coupling):
             if p.membrane:
                 Q[live]=membrane_step(Q[live],grad,dt,mu*R/p.membrane_shear_modulus_n_m)
                 strain=np.linalg.norm(Q[live],axis=(1,2));counters['max_shape_strain']=max(counters['max_shape_strain'],float(strain.max()))
-                if strain.max()>p.max_shape_strain:raise ValueError(' Deformation exceeds the small-strain range ,  Increase membrane modulus or use a resolved membrane model ')
+                if strain.max()>p.max_shape_strain:raise ValueError("Deformation exceeds the small-strain range. Increase membrane modulus or use a resolved membrane model.")
             # Finite exclusion is distinct from adhesion and from a prescribed
             # axial minimum gap. Side-by-side passage is allowed by geometry.
             if coupling and p.exclusion:
@@ -323,7 +321,7 @@ def _advance(config,ids,birth,initial,p,progress,coupling):
                         if overlap<=0:continue
                         direction=delta/max(distance,1e-30)
                         if distance<1e-25:direction=np.array([0.,0.,1.])
-                        if fixed[i] and fixed[j]:raise ValueError(' Fixed bound spheres overlap ,  Check contact parameters ')
+                        if fixed[i] and fixed[j]:raise ValueError("Bound cells overlap. Check the contact parameters.")
                         correction=(overlap+1e-12)*direction
                         if fixed[i]:new[j]+=correction
                         elif fixed[j]:new[i]-=correction
@@ -336,7 +334,7 @@ def _advance(config,ids,birth,initial,p,progress,coupling):
                     if residual<1e-11:break
                 for i,j in cKDTree(new).query_pairs(2*R,output_type='ndarray'):
                     counters['max_overlap_um']=max(counters['max_overlap_um'],float(max(0.,2*R-np.linalg.norm(new[i]-new[j]))*1e6))
-                if counters['max_overlap_um']>.01:raise ValueError(' Sphere-contact constraint did not converge ;  Reduce the time step ')
+                if counters['max_overlap_um']>.01:raise ValueError("Cell-contact constraints did not converge. Reduce the time step.")
             radius=np.linalg.norm(new[:,:2],axis=1);touch=radius>a-R-rough
             counters['wall_contacts']+=int(touch.sum())
             new[:,:2]*=np.minimum(1.,(a-R-rough)/np.maximum(radius,1e-30))[:,None]
@@ -375,8 +373,8 @@ def simulate(scene,parameters=None,progress=lambda s:None):
     from ..scene3d.data import _clean
     p=deepcopy(parameters or CollectiveParameters()).validate();cfg=scene.data.config
     if p.inertia and cfg.supply.wall_capture_rate_s:
-        raise ValueError(' First-order inertia does not include convection of fixed-body reaction forces ;  Set capillary capture rate to 0 Or disable the inertial correction ')
-    if p.start_s+p.duration_s>scene.model.parameters.duration_s:raise ValueError(' Study window exceeds the source duration ')
+        raise ValueError("First-order inertia excludes convection of fixed-body reaction forces. Set wall capture to zero or disable the inertial correction.")
+    if p.start_s+p.duration_s>scene.model.parameters.duration_s:raise ValueError("The study window exceeds the source duration.")
     r=scene.model.records;keep=np.asarray(r['injection_s'])<p.start_s+p.duration_s
     ids=np.asarray(r['event_id'])[keep];birth=np.asarray(r['injection_s'])[keep]
     if len(ids)>p.max_events:raise ValueError(f' Source events including warm-up  {len(ids)},  Exceeds limit  {p.max_events};  Adjust concentration / Study settings ,  All cell events retained ')
@@ -389,8 +387,7 @@ def simulate(scene,parameters=None,progress=lambda s:None):
     baseline_x=baseline_state=baseline_cross=None;baseline_diag=None
     if p.compare_independent:
         bt,bx,bs,_,baseline_cross,baseline_diag=_advance(cfg,ids,birth,initial,p,progress,False)
-        # Different adaptive step histories are sampled on a common recorded
-        # clock, preserving state changes instead of interpolating unborn cells.
+        # Sample adaptive histories on a common clock, respecting admission and exit states.
         baseline_x=np.full_like(x,np.nan);baseline_state=np.zeros_like(state)
         for j in range(len(ids)):
             baseline_state[:,j]=bs[np.clip(np.searchsorted(bt,time,side='right')-1,0,len(bt)-1),j]

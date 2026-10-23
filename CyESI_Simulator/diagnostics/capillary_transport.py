@@ -1,8 +1,4 @@
-"""Separate transverse localization, axis centering and temporal ordering.
-
-This module interrogates computed histories. It never introduces an attractive
-force, infers a liquid thread from cell positions, or regularizes Poisson input.
-"""
+"""Measure radial localization, axis centering and temporal ordering from paths."""
 import math
 import numpy as np
 from ..particle.forces import brownian_diffusivity

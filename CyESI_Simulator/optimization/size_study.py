@@ -1,7 +1,7 @@
-"""Controlled diameter comparison on one pressure-corrected dilute flow field.
+"""Cell-diameter comparisons using a common dilute liquid-flow solution.
 
-Diameter changes particle forces/clearance, not the carrier-liquid CFD. The
-small-particle case retains the stochastic reference integrator and its step.
+Diameter changes particle forces and wall clearance. Small-cell cases use the
+stochastic reference integrator and its configured time step.
 """
 from copy import deepcopy
 from dataclasses import dataclass,field,asdict
@@ -24,13 +24,13 @@ class SizeParameters:
     brownian_cutoff_um: float=2.
 
     def validate(self,config):
-        if not self.diameters_um or len(set(self.diameters_um))!=len(self.diameters_um):raise ValueError(' Diameters must be non-empty and unique ')
-        if len(self.diameters_um)>4:raise ValueError(' Comparison supports up to four diameters ')
-        if any(not math.isfinite(d) or d<=0 or d>=config.geometry.inner_id_um for d in self.diameters_um):raise ValueError(' Each diameter must exceed  0  And fit inside the sample capillary  ID')
-        if isinstance(self.cells,bool) or not isinstance(self.cells,int) or self.cells<16:raise ValueError(' Each group requires at least  16  Response trajectories ')
-        if not isinstance(self.saved_trajectories,int) or self.saved_trajectories<1:raise ValueError(' Save at least one spatial trajectory ')
-        if not math.isfinite(self.max_tip_timeout_s) or self.max_tip_timeout_s<=0:raise ValueError(' Maximum tip tracking time must be positive ')
-        if not math.isfinite(self.brownian_cutoff_um) or self.brownian_cutoff_um<0:raise ValueError(' Brownian threshold must be non-negative ')
+        if not self.diameters_um or len(set(self.diameters_um))!=len(self.diameters_um):raise ValueError("Specify at least one diameter, without duplicates.")
+        if len(self.diameters_um)>4:raise ValueError("Compare at most four diameters.")
+        if any(not math.isfinite(d) or d<=0 or d>=config.geometry.inner_id_um for d in self.diameters_um):raise ValueError("Each diameter must be positive and fit inside the sample capillary.")
+        if isinstance(self.cells,bool) or not isinstance(self.cells,int) or self.cells<16:raise ValueError("Each group requires at least 16 response trajectories.")
+        if not isinstance(self.saved_trajectories,int) or self.saved_trajectories<1:raise ValueError("Save at least one spatial trajectory.")
+        if not math.isfinite(self.max_tip_timeout_s) or self.max_tip_timeout_s<=0:raise ValueError("Maximum tip tracking time must be positive.")
+        if not math.isfinite(self.brownian_cutoff_um) or self.brownian_cutoff_um<0:raise ValueError("Brownian-motion threshold must be nonnegative.")
         return self
 
 
@@ -74,7 +74,7 @@ def analyze(config,parameters=None,acquisition_parameters=None,progress=lambda s
     from ..visualization.explorer_data import ExplorerData
     config=deepcopy(config).validate();p=deepcopy(parameters or SizeParameters()).validate(config)
     config.cell.brownian_below_um=p.brownian_cutoff_um
-    config.cell.brownian_enabled=None  # This independent study owns its cutoff policy.
+    config.cell.brownian_enabled=None  # Apply this study's Brownian cutoff.
     ap=deepcopy(acquisition_parameters or AcquisitionParameters(signal_width_ms=20.)).validate()
     config.spray.enabled=False
     progress('Solving one shared liquid / solvent / ionic / electric field for the dilute size comparison')
@@ -89,8 +89,7 @@ def analyze(config,parameters=None,acquisition_parameters=None,progress=lambda s
         progress(f'Diameter {diameter:g} um: {p.cells} responses; Brownian={diameter<=c.cell.brownian_below_um}')
         started=time.perf_counter();particles=simulate(c,solvent,electric,progress=progress)
         initial_exited=int(particles.exited.sum());initial_timeout=c.numerics.particle_tip_timeout_s
-        # Refine unresolved tip timeouts rather than presenting censoring as
-        # size-dependent permanent loss. Keep the physical step unchanged.
+        # Extend timed-out tracks with the same integration step; report unresolved paths as censored.
         while (np.any((particles.status==3)&(particles.stress['bulk_status']==0))
                and c.numerics.particle_tip_timeout_s<p.max_tip_timeout_s):
             c.numerics.particle_tip_timeout_s=min(p.max_tip_timeout_s,c.numerics.particle_tip_timeout_s*4)

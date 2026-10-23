@@ -1,9 +1,7 @@
-"""Native Cartesian-volume geometry for the separate offline 3-D viewer.
+"""Render Cartesian finite-volume fields with material masks.
 
-This adapter draws finite-volume values at their actual three-dimensional
-coordinates. It never revolves a 2-D field, invents a Taylor cone, or extrapolates
-an unresolved field into the upstream tubing. Slice patches are cell-constant
-values, matching the solver's finite-volume storage, with solids masked.
+Slices use cell-constant values at their stored coordinates. Masked cells and
+regions outside the saved domain are omitted.
 """
 from __future__ import annotations
 
@@ -50,7 +48,7 @@ def _field(volume, name):
         raise ValueError(f"Unknown native 3-D field: {name}")
     if name == "electric_velocity":
         if not hasattr(volume, "delta_velocity"):
-            raise ValueError(' Compute  0 kV  Compare ;  Velocity difference requires two voltage solutions ')
+            raise ValueError("A velocity-difference comparison requires solutions with and without applied voltage.")
         values = np.linalg.norm(volume.delta_velocity, axis=-1)*1000
     elif name == "speed":
         values = np.linalg.norm(volume.velocity, axis=-1)*1000

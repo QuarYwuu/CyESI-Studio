@@ -1,8 +1,6 @@
-"""Axisymmetric field adapter for the shared continuous finite-sphere model.
+"""Map axisymmetric fields to three-dimensional finite-sphere trajectories.
 
-The background remains a solved (r,z) axisymmetric field. Physical cells have
-three coordinates: a particle is never interpreted as an axisymmetric ring.
-Azimuth is inherited from saved bulk x/y history; missing azimuth is reported.
+Bulk x/y histories supply cell azimuth. Missing azimuth is reported as unavailable.
 """
 from collections import OrderedDict
 from pathlib import Path

@@ -1,7 +1,5 @@
-/* Offline, dependency-free WebGL renderer. Input coordinates are always SI:
- * [x_m, y_m, z_m], with z along the coaxial instrument. Geometry stays connected
- * under the continuous axial lens; it never creates separate scene segments.
- * This module renders supplied solver data and does not integrate any physics.
+/* WebGL renderer for solver coordinates [x_m, y_m, z_m].
+ * The instrument axis is z; axial compression is applied only for display.
  */
 
 const TAU = Math.PI * 2;

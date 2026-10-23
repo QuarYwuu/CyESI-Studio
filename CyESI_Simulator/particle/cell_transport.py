@@ -105,7 +105,7 @@ def simulate(config, solvent, electric, voltage_scale=1., progress=lambda x: Non
         try:
             from .compiled_tip import integrate as compiled_integrate
         except ImportError:
-            if n.particle_backend=='numba':raise RuntimeError('Numba backend requested but unavailable; install cyesi-simulator[performance]')
+            if n.particle_backend=='numba':raise RuntimeError('Numba is unavailable. Install cyesi-studio[performance].')
         else:
             progress(f'Tracking {N} cells with compiled finite-sphere transport')
             time,dose,exposure,outlet_radius,outlet_c,exit_tip,history,max_slip_re=compiled_integrate(

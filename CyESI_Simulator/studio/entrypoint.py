@@ -1,4 +1,4 @@
-"""English Studio launcher; numerical command-line options remain available."""
+"""Launch Studio or dispatch command-line simulation options."""
 def main():
     import sys
     from ..main import main as dispatch

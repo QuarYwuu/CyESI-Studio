@@ -1,8 +1,7 @@
-"""Pillow scene renderer for the two native visual workspaces.
+"""Pillow renderer for device and tip views.
 
-Each frame is also a standalone exportable PNG. Geometry, concentration,
-tracks and electric lines come from ExplorerData. Only the explicitly amber
-mechanism view uses an assumed Taylor reference / drop / membrane drawing.
+Frames can be exported as PNG. Numerical views use ExplorerData; the amber
+mechanism view shows prescribed cone, droplet and membrane illustrations.
 """
 from __future__ import annotations
 

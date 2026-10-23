@@ -3,7 +3,7 @@ const fmt=(v,d=3)=>v==null||!Number.isFinite(Number(v))?'—':Number(v).toLocale
 const switches=[['hydrodynamics',' Confined hydrodynamic coupling '],['wall_reflections',' Cylindrical wall reflections '],['pair_lubrication',' Pair lubrication '],['exclusion',' Finite-sphere exclusion '],['inlet_queue',' Inlet occupancy queue '],['faxen',' Finite-size Faxén correction '],['membrane',' Small-deformation membrane model '],['inertia',' First-order inertial correction '],['compare_independent',' Independent transport reference ']];
 const statuses={computed:' Computed ',reduced:' Reduced model ',conditional:' Sensitivity model ',off:' Off ',unresolved:' Not included ',partial:' Partly enabled '};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-// Display-only SI ranges: zooming never modifies trajectories or physical inputs.
+// Display ranges use SI units.
 export function boundedRange(range,bounds,minSpan=0){
  const total=bounds[1]-bounds[0];if(!(total>0)||![...range,...bounds,minSpan].every(Number.isFinite))throw Error(' Invalid display range ');
  const span=clamp(Math.abs(range[1]-range[0]),Math.min(total,Math.max(minSpan,Number.EPSILON)),total),center=(range[0]+range[1])/2;

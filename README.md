@@ -2,7 +2,7 @@
 
 CyESI Studio is an interactive Python application for exploring interfaces used in label-free mass cytometry coupling flow cytometry with electrospray ionization mass spectrometry (CyESI-MS). It connects capillary geometry, liquid and gas flow, solvent exchange, cell transport, electrical fields and mass-spectrometer acquisition in a local browser workspace.
 
-The interface includes an animated 2D device overview, axisymmetric and 3D field views, individual cell trajectories, parameter studies and acquisition-window analysis. Numerical solvers and browser assets are included in the source.
+The browser interface shows a 2D device overview, axisymmetric and 3D fields, cell trajectories, parameter studies and acquisition windows. All calculations run locally in Python.
 
 ## Installation
 
@@ -55,7 +55,7 @@ $env:CYESI_OUTPUT_DIR = "D:\CyESI_runs"
 
 ## Model scope
 
-The application links numerical transport models to specified molecular or signal durations and acquisition windows. Predicted collection opportunities are distinct from experimentally measured cell detection or metabolite identification. Acquisition timing currently represents the original Q Exactive quadrupole-Orbitrap instrument; time-of-flight (TOF) performance has not been evaluated in this software.
+Acquisition calculations use the timing of the original Q Exactive quadrupole-Orbitrap instrument. They estimate collection opportunities from the specified signal width and cell input rate; detection sensitivity and metabolite identification require experimental measurements. Time-of-flight (TOF) acquisition is not included.
 
 ## License
 

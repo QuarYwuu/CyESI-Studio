@@ -12,8 +12,7 @@ FONT='Microsoft YaHei UI'
 
 def styles(root):
     style=ttk.Style(root)
-    # No theme change and no unprefixed style changes: legacy widgets keep
-    # their existing style even if an advanced window is opened here.
+    # Use workbench-specific style names to avoid changing other windows.
     style.configure('WB.TEntry',padding=6,fieldbackground=WHITE,font=(FONT,10))
     style.configure('WB.TCombobox',padding=5,font=(FONT,10))
     style.configure('WB.Treeview',font=(FONT,10),rowheight=32,background=WHITE,fieldbackground=WHITE,foreground=INK)

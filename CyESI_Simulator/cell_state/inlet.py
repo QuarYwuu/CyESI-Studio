@@ -1,9 +1,8 @@
-"""Engineering inlet estimate: choked Fanno tube + paraxial disk suction.
+"""Fanno transfer-tube flow and paraxial suction near the inlet axis.
 
-Thermo catalog identifies Q Exactive transfer tube 70005-20606, nominal
-0.58 mm bore and 58.42 mm length. User specifies 0.60 mm and 320 C wall.
-Uniform effective temperatures bracket heating sensitivity; these are not
-rigorous confidence bounds or a manufacturer flow specification.
+Q Exactive tube 70005-20606 has a catalog bore of 0.58 mm and length of
+58.42 mm. Default scenario inputs use 0.60 mm and a 320 C wall. Uniform
+effective gas temperatures provide heating-sensitivity cases.
 """
 import numpy as np
 from scipy.optimize import brentq
